@@ -338,14 +338,16 @@ class FileService {
     }
 
     /*Email Service <- uses serialization*/
-    public boolean saveEmail(Email email) throws IOException {
-        FileOutputStream fileStream = new FileOutputStream(String.valueOf(emailList));
-        // Make a ObjectOutputStream
-        ObjectOutputStream os = new ObjectOutputStream(fileStream);
-        // Write the object
-        os.writeObject(email);
-
-        return true;
+    public boolean saveEmail(Email email) {
+        boolean result = false;
+        try (FileOutputStream fileStream = new FileOutputStream(String.valueOf(emailList));
+             ObjectOutputStream os = new ObjectOutputStream(fileStream)){
+            os.writeObject(email);
+            result = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     public ArrayList<Email> findMail(String sentDate) throws IOException, ClassNotFoundException {
@@ -358,10 +360,8 @@ class FileService {
                     emails.add(email);
                 }
             }
-        } catch (EOFException e) {//bad practise
+        } catch (EOFException e) {
         }
-
-
         return emails;
     }
 }
@@ -401,7 +401,7 @@ class EmailSendingService implements Runnable {
             transport.close();
             file_service.saveEmail(email);
             return true;
-        } catch (MessagingException | IOException ae) {
+        } catch (MessagingException ae) {
             ae.printStackTrace();
             return false;
         }
@@ -414,6 +414,7 @@ class EmailSendingService implements Runnable {
         String today = dtf.format(now);
         FileService file_service = new FileService();
         dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
         for (String s : file_service.getAllRecipients()) {
             String[] split1 = s.split(": ");
             String[] split2 = split1[1].split(",");
@@ -428,11 +429,7 @@ class EmailSendingService implements Runnable {
 
                 Email email = new Email(split2[1], "Surprise from Damika", content, dtf.format(now));
                 sendMail(email);
-                try {
-                    file_service.saveEmail(email);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                file_service.saveEmail(email);
             }
         }
 
@@ -478,6 +475,45 @@ public class EmailClient {
         System.out.println(instructions);
     }
 
+    private void saveRecipient(String data) {
+        System.out.println(
+                fileService.saveRecipient(data) ?
+                        "Client saved successfully!" :
+                        "Try again!"
+        );
+    }
+
+    private void saveOfficialRecipient(String[] split1) {
+        OfficialRecipientController orc = new OfficialRecipientController();
+        Official_Recipient or = (Official_Recipient) orc.create();
+
+        or.setName(split1[0]);
+        or.setEmail(split1[1]);
+        or.setDesignation(split1[2]);
+        saveRecipient(or.toString());
+    }
+
+    private void saveOfficialFriendRecipient(String[] split1) {
+        OfficialRecipientFriendController orfc = new OfficialRecipientFriendController();
+        Official_Recipient_Friend orf = (Official_Recipient_Friend) orfc.create();
+        orf.setName(split1[0]);
+        orf.setEmail(split1[1]);
+        orf.setDesignation(split1[2]);
+        orf.setBirthday(split1[3]);
+
+        saveRecipient(orf.toString());
+    }
+
+    private void savePersonalRecipient(String[] split1) {
+        PersonalRecipientController prc = new PersonalRecipientController();
+        Personal_Recipient pr = (Personal_Recipient) prc.create();
+        pr.setName(split1[0]);
+        pr.setNickname(split1[1]);
+        pr.setEmail(split1[2]);
+        pr.setBirthday(split1[3]);
+
+        saveRecipient(pr.toString());
+    }
 
     private void addNewCustomer1() {
         printInstructions("Enter 1: if you want to add a new recipient\n" +
@@ -491,7 +527,7 @@ public class EmailClient {
                 String[] split1 = new String[0];
                 printInstructions("\n" +
                         "input format - \n" +
-                        "Official: nimal,nimal@gmail.com,ceo\n" +
+                        "Official: Nimal,nimal@gmail.com,ceo\n" +
                         "Office_friend: kamal,kamal@gmail.com,clerk,2000/09/08\n" +
                         "Personal: sunil,sunil@gmail.com,<nick-name>,2000/08/03");
 
@@ -506,45 +542,13 @@ public class EmailClient {
 
                 switch (split[0]) {
                     case ("Official"):
-                        OfficialRecipientController orc = new OfficialRecipientController();
-                        Official_Recipient or = (Official_Recipient) orc.create();
-
-                        or.setName(split1[0]);
-                        or.setEmail(split1[1]);
-                        or.setDesignation(split1[2]);
-                        System.out.println(
-                                fileService.saveRecipient(or.toString()) ?
-                                        "Client saved successfully!" :
-                                        "Try again!"
-                        );
+                        saveOfficialRecipient(split1);
                         break;
                     case ("Office_friend"):
-                        OfficialRecipientFriendController orfc = new OfficialRecipientFriendController();
-                        Official_Recipient_Friend orf = (Official_Recipient_Friend) orfc.create();
-                        orf.setName(split1[0]);
-                        orf.setEmail(split1[1]);
-                        orf.setDesignation(split1[2]);
-                        orf.setBirthday(split1[3]);
-
-                        System.out.println(
-                                fileService.saveRecipient(orf.toString()) ?
-                                        "Client saved successfully!" :
-                                        "Try again!"
-                        );
+                        saveOfficialFriendRecipient(split1);
                         break;
                     case ("Personal"):
-                        PersonalRecipientController prc = new PersonalRecipientController();
-                        Personal_Recipient pr = (Personal_Recipient) prc.create();
-                        pr.setName(split1[0]);
-                        pr.setNickname(split1[1]);
-                        pr.setEmail(split1[2]);
-                        pr.setBirthday(split1[3]);
-
-                        System.out.println(
-                                fileService.saveRecipient(pr.toString()) ?
-                                        "Client saved successfully!" :
-                                        "Try again!"
-                        );
+                        savePersonalRecipient(split1);
                         break;
                     default:
                         printInstructions("Please follow the given format for input!");
@@ -575,29 +579,21 @@ public class EmailClient {
     private void sendEmail2() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         LocalDateTime now = LocalDateTime.now();
-        String[] emailDetails = new String[3];
-        System.out.println("Please input your sending email details!");
-        System.out.println("Input format: recipient's email, subject, content");
-        try {
-            emailDetails = reader.readLine().split(", ");
-        } catch (Exception e) {
-            System.out.println("Please type the email details according to the given format");
-        }
-        try {
-            BasicEmailController bec = new BasicEmailController();
-            Email email = bec.create();
-            email.setRecipient(emailDetails[0]);
-            email.setSubject(emailDetails[1]);
-            email.setContent(emailDetails[2]);
-            email.setSendingDate(dtf.format(now));
+        String[] emailDetails;
+        printInstructions("Please input your sending email details!\n" +
+                "Input format: recipient's email, subject, content");
+        emailDetails = giveUserInsertedDetails().split(", ");
 
-            if (emailService.sendMail(email)) {
-                System.out.println("Your email was sent successfully!");
-                boolean b = fileService.saveEmail(email);
-                System.out.println(b ? "Mail saved in the server." : "Error occurred saving the mail.");
-            }
-        } catch (ArrayIndexOutOfBoundsException | IOException e) {
-            System.out.println("Please insert the data according the given format!");
+        BasicEmailController bec = new BasicEmailController();
+        Email email = bec.create();
+        email.setRecipient(emailDetails[0]);
+        email.setSubject(emailDetails[1]);
+        email.setContent(emailDetails[2]);
+        email.setSendingDate(dtf.format(now));
+        if (emailService.sendMail(email)) {
+            System.out.println("Your email was sent successfully!");
+            boolean b = fileService.saveEmail(email);
+            System.out.println(b ? "Mail saved in the server." : "Error occurred saving the mail.");
         }
     }
 

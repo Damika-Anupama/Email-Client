@@ -5,8 +5,11 @@ Personal: Anupama,damikan.20@cse.mrt.ac.lk,Anu,2000/08/03
 Office_friend: Sunil,nanayakkaraptda.20@uom.lk,<nick-name>,2000/08/03
 Office_friend: Armandi,asnanayakkara110@gmail.com,clerk,1996/08/04
 Office_friend: Gevin,gevin@gmail.com,clerk,2000/08/14
-Personal: Damika,damia,damikaanupama@gmail.com,2000/08/04
-Personal: sunil,suni,sunil@gmail.com,2000/08/03
+Personal: Damika,damikaanupama@gmail.com,damia,2000/08/14
+Personal: sunil,sunil@gmail.com,suni,2000/08/03
 Office_friend: Namal,namal@gmail.com,clerk,2000/09/08
 Official: Bimal,bimal@gmail.com,ceo
 Personal: jaye,jaye@gmail.com,JA,2000/08/03
+Official: Gamini,gamini@gmail.com,officer
+Office_friend: chithra,chithra@gmail.com,clerk,2000/09/08
+Personal: anoma,anoma@gmail.com,ahewa,2000/08/03
