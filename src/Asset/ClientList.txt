@@ -3,5 +3,6 @@ Official: nimal,nimal@gmail.com,ceo
 Office_friend: kamal,kamal@gmail.com,clerk,2000/12/12
 Personal: Anupama,damikan.20@cse.mrt.ac.lk,Anu,2000/08/03
 Office_friend: Sunil,nanayakkaraptda.20@uom.lk,<nick-name>,2000/08/03
-Personal: Damika,damikaanupama@gmail.com,damia,2000/08/04
 Office_friend: Armandi,asnanayakkara110@gmail.com,clerk,1996/08/04
+Office_friend: Gevin,gevin@gmail.com,clerk,2000/08/14
+Personal: Damika,damia,damikaanupama@gmail.com,2000/08/04

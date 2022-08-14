@@ -384,7 +384,7 @@ class EmailSendingService implements Runnable {
                 // send the birthday wish from here (from another method)
 
                 Email email = new Email(split2[1], "Surprise from Damika", content, dtf.format(now));
-                new EmailSendingService().sendMail(email);
+                sendMail(email);
                 try {
                     file_service.saveEmail(email);
                 } catch (IOException e) {
@@ -395,6 +395,14 @@ class EmailSendingService implements Runnable {
 
     }
 }
+
+class Handler1 implements Thread.UncaughtExceptionHandler {
+    public void uncaughtException(Thread t, Throwable e) {
+        System.out.println("Throwable: " + e.getMessage());
+        System.out.println(t.toString());
+    }
+}
+
 
 public class EmailClient {
     private final FileService fileService;
@@ -422,7 +430,6 @@ public class EmailClient {
     private FileService fileServiceProvider() {
         return new FileService();
     }
-
     private void printEnterOptionTypeMessage() {
         System.out.println("Enter option type: \n"
                 + "1 - Adding a new recipient\n"
@@ -433,6 +440,7 @@ public class EmailClient {
                 + "6 - exit\n"
         );
     }
+
 
     private void addNewCustomer1() {
         System.out.println(
@@ -518,7 +526,11 @@ public class EmailClient {
                 break;
             case 2:
                 System.out.print("Please enter the email of the recipient: ");
-                System.out.println(fileService.findRecipientByEmailAddress(reader.readLine()));
+                try {
+                    System.out.println(fileService.findRecipientByEmailAddress(reader.readLine()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             case 3:
 
@@ -558,7 +570,12 @@ public class EmailClient {
     private void printRecipientsDueToBirthday3() {
         System.out.println("Please enter the birthday of the recipients: ");
         System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
-        ArrayList<String> recipients = fileService.findRecipientsByBOD(reader.readLine());
+        ArrayList<String> recipients = null;
+        try {
+            recipients = fileService.findRecipientsByBOD(reader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         if (recipients.size() == 0) {
             System.out.println("No recipient was found, according to the given birthday!");
         } else {
@@ -567,9 +584,17 @@ public class EmailClient {
     }
 
     private void printEmails4() {
+
         System.out.print("Please enter the birthday of the sent emails: ");
         System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
-        ArrayList<Email> emails = fileService.findMail(reader.readLine());
+        ArrayList<Email> emails = null;
+        try {
+            emails = fileService.findMail(reader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
         emails.forEach(System.out::println);
     }
 
@@ -577,8 +602,13 @@ public class EmailClient {
         System.out.println(fileService.getAllRecipients().length);
     }
 
-    private void systemShutdown6() {
+    private void shutdownSystem6() {
         System.out.println("System Shutdown!");
+        try {
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         System.exit(0);
     }
 
@@ -592,44 +622,49 @@ public class EmailClient {
         return option;
     }
 
-    private void actionController() throws IOException, ClassNotFoundException {
+    private void selectOptions(int option) {
+
+        switch (option) {
+            case 1:
+                addNewCustomer1();
+                break;
+            case 2:
+                sendEmail2();
+                break;
+            case 3:
+                printRecipientsDueToBirthday3();
+                break;
+            case 4:
+                printEmails4();
+                break;
+            case 5:
+                giveRecipientCount5();
+                break;
+            case 6:
+                shutdownSystem6();
+            default:
+                System.out.println("Please enter a relevant number to proceed !");
+                break;
+        }
+    }
+
+    private void actionController() {
         while (true) {
             printEnterOptionTypeMessage();
-            switch (giveUserSelectedOption()) {
-                case 1:
-                    addNewCustomer1();
-                    break;
-                case 2:
-                    sendEmail2();
-                    break;
-                case 3:
-                    printRecipientsDueToBirthday3();
-                    break;
-                case 4:
-                    printEmails4();
-                    break;
-                case 5:
-                    giveRecipientCount5();
-                    break;
-                case 6:
-                    systemShutdown6();
-                default:
-                    System.out.println("Please enter a relevant number to proceed !");
-                    break;
-
-            }
+            selectOptions(giveUserSelectedOption());
         }
+    }
+
+    private void handleGlobalExceptions() {
+        Handler1 handler = new Handler1();
+        Thread.setDefaultUncaughtExceptionHandler(handler);
     }
 
     public static void main(String[] args) {
         EmailClient emailClient = new EmailClient();
 
+        emailClient.handleGlobalExceptions();
         emailClient.greetRecipients();
-        try {
-            emailClient.actionController();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
+        emailClient.actionController();
     }
 }

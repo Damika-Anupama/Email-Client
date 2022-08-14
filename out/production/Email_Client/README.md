@@ -52,7 +52,7 @@ You are given marks for the
 (i.e. sending a birthday greeting, sending an Email based on the instructions given through command-line, ability to serialize Email objects,  etc).
 •	Correct use of OOP principles
 •	Use of coding best practices
-Use the given Email_Client.java file as the starting point.
+Use the given EmailClient.java file as the starting point.
 
 Save the recipient data into clientList.txt.
 Submission information: Put all the code into one text file, convert it to a pdf, and submit. 
