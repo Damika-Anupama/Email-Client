@@ -27,11 +27,6 @@ class Recipient {
     public Recipient() {
     }
 
-    public Recipient(String name, String email) {
-        this.name = name;
-        this.email = email;
-    }
-
     public String getName() {
         return name;
     }
@@ -63,15 +58,6 @@ class Official_Recipient extends Recipient {
     public Official_Recipient() {
     }
 
-    public Official_Recipient(String designation) {
-        this.designation = designation;
-    }
-
-    public Official_Recipient(String name, String email, String designation) {
-        super(name, email);
-        this.designation = designation;
-    }
-
     public String getDesignation() {
         return designation;
     }
@@ -95,19 +81,6 @@ class Official_Recipient_Friend extends Official_Recipient {
     public Official_Recipient_Friend() {
     }
 
-    public Official_Recipient_Friend(String birthday) {
-        this.birthday = birthday;
-    }
-
-    public Official_Recipient_Friend(String name, String email, String designation, String birthday) {
-        super(name, email, designation);
-        this.birthday = birthday;
-    }
-
-    public String getBirthday() {
-        return birthday;
-    }
-
     public void setBirthday(String birthday) {
         this.birthday = birthday;
     }
@@ -126,31 +99,11 @@ class Personal_Recipient extends Recipient {
     private String nickname;
     private String birthday;
 
-    public Personal_Recipient() {
-    }
-
-    public Personal_Recipient(String nickname, String birthday) {
-        this.nickname = nickname;
-        this.birthday = birthday;
-    }
-
-    public Personal_Recipient(String name, String email, String nickname, String birthday) {
-        super(name, email);
-        this.nickname = nickname;
-        this.birthday = birthday;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
     }
 
-    public String getBirthday() {
-        return birthday;
-    }
 
     public void setBirthday(String birthday) {
         this.birthday = birthday;
@@ -221,6 +174,96 @@ class Email implements Serializable {
                         ", subject=" + subject +
                         ", content=" + content +
                         ", sentDateTime=" + sendingDate;
+    }
+}
+
+/*Apply Factory Method DP for model class creation*/
+interface NewRecipientCreator {
+    Recipient create();
+}
+
+interface NewEmailCreator {
+    Email create();
+}
+
+class OfficialRecipientCreator implements NewRecipientCreator {
+
+    @Override
+    public Recipient create() {
+        return new Official_Recipient();
+    }
+}
+
+class OfficialRecipientFriendCreator implements NewRecipientCreator {
+    @Override
+    public Recipient create() {
+        return new Official_Recipient_Friend();
+    }
+}
+
+class PersonalRecipientCreator implements NewRecipientCreator {
+
+    @Override
+    public Recipient create() {
+        return new Personal_Recipient();
+    }
+}
+
+class EmailCreator implements NewEmailCreator {
+
+    @Override
+    public Email create() {
+        return new Email();
+    }
+}
+
+abstract class RecipientController {
+    public abstract NewRecipientCreator giveRecipientObject();
+
+    public Recipient create() {
+        NewRecipientCreator creator = giveRecipientObject();
+        return creator.create();
+    }
+}
+
+abstract class EmailController {
+    public abstract NewEmailCreator giveEmailObject();
+
+    public Email create() {
+        NewEmailCreator creator = giveEmailObject();
+        return creator.create();
+    }
+}
+
+class OfficialRecipientController extends RecipientController {
+
+    @Override
+    public OfficialRecipientCreator giveRecipientObject() {
+        return new OfficialRecipientCreator();
+    }
+}
+
+class OfficialRecipientFriendController extends RecipientController {
+
+    @Override
+    public NewRecipientCreator giveRecipientObject() {
+        return new OfficialRecipientFriendCreator();
+    }
+}
+
+class PersonalRecipientController extends RecipientController {
+
+    @Override
+    public NewRecipientCreator giveRecipientObject() {
+        return new PersonalRecipientCreator();
+    }
+}
+
+class BasicEmailController extends EmailController {
+
+    @Override
+    public NewEmailCreator giveEmailObject() {
+        return new EmailCreator();
     }
 }
 
@@ -410,116 +453,101 @@ public class EmailClient {
     private final BufferedReader reader;
 
     public EmailClient() {
-        this.fileService = fileServiceProvider();
-        this.emailService = emailServiceProvider();
-        this.reader = bufferedReaderProvider();
+        this.fileService = getFileServiceProvider();
+        this.emailService = getEmailServiceProvider();
+        this.reader = getBufferedReaderProvider();
     }
 
     private void greetRecipients() {
         new Thread(new EmailSendingService(), "birthdayWisher").start();
     }
 
-    private BufferedReader bufferedReaderProvider() {
+    private BufferedReader getBufferedReaderProvider() {
         return new BufferedReader(new InputStreamReader(System.in));
     }
 
-    private EmailSendingService emailServiceProvider() {
+    private EmailSendingService getEmailServiceProvider() {
         return new EmailSendingService();
     }
 
-    private FileService fileServiceProvider() {
+    private FileService getFileServiceProvider() {
         return new FileService();
     }
-    private void printEnterOptionTypeMessage() {
-        System.out.println("Enter option type: \n"
-                + "1 - Adding a new recipient\n"
-                + "2 - Sending an email\n"
-                + "3 - Printing out all the recipients who have birthdays\n"
-                + "4 - Printing out details of all the emails sent\n"
-                + "5 - Printing out the number of recipient objects in the application\n"
-                + "6 - exit\n"
-        );
+
+    private void printInstructions(String instructions) {
+        System.out.println(instructions);
     }
 
 
     private void addNewCustomer1() {
-        System.out.println(
-                "Enter 1: if you want to add a new recipient\n" +
-                        "Enter 2: If you want to get a specified recipient by email\n" +
-                        "Enter 3: If you want to get all the recipients"
-        );
-        int input = 0;
-        try {
-            input = Integer.parseInt(reader.readLine());
-        } catch (Exception e) {
-            System.out.println("Error! Please enter a valid input!");
-        }
+        printInstructions("Enter 1: if you want to add a new recipient\n" +
+                "Enter 2: If you want to get a specified recipient by email\n" +
+                "Enter 3: If you want to get all the recipients");
+        int input = giveUserSelectedOption(0);
+
         switch (input) {
             case 1:
                 String[] split = new String[0];
                 String[] split1 = new String[0];
-                System.out.println("\n" +
+                printInstructions("\n" +
                         "input format - \n" +
                         "Official: nimal,nimal@gmail.com,ceo\n" +
                         "Office_friend: kamal,kamal@gmail.com,clerk,2000/09/08\n" +
-                        "Personal: sunil,<nick-name>,sunil@gmail.com,2000/08/03"
-                );
-                String recipientDetails = null;
-                try {
-                    recipientDetails = reader.readLine();
-                } catch (IOException e) {
-                    System.out.println("Your input operation is failed or interpreted!");
-                }
+                        "Personal: sunil,sunil@gmail.com,<nick-name>,2000/08/03");
+
+                String recipientDetails = giveUserInsertedDetails();
+
                 try {
                     split = recipientDetails.split(": ");
                     split1 = split[1].split(",");
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println("Please Enter according to the correct format!");
                 }
-                Official_Recipient official_recipient;
-                Official_Recipient_Friend official_recipient_friend;
-                Personal_Recipient personal_Recipient;
+
                 switch (split[0]) {
                     case ("Official"):
-                        official_recipient = new Official_Recipient(
-                                split1[0],
-                                split1[1],
-                                split1[2]
-                        );
+                        OfficialRecipientController orc = new OfficialRecipientController();
+                        Official_Recipient or = (Official_Recipient) orc.create();
+
+                        or.setName(split1[0]);
+                        or.setEmail(split1[1]);
+                        or.setDesignation(split1[2]);
                         System.out.println(
-                                fileService.saveRecipient(official_recipient.toString()) ?
+                                fileService.saveRecipient(or.toString()) ?
                                         "Client saved successfully!" :
-                                        "Something went wrong!"
+                                        "Try again!"
                         );
                         break;
                     case ("Office_friend"):
-                        official_recipient_friend = new Official_Recipient_Friend(
-                                split1[0],
-                                split1[1],
-                                split1[2],
-                                split1[3]
-                        );
+                        OfficialRecipientFriendController orfc = new OfficialRecipientFriendController();
+                        Official_Recipient_Friend orf = (Official_Recipient_Friend) orfc.create();
+                        orf.setName(split1[0]);
+                        orf.setEmail(split1[1]);
+                        orf.setDesignation(split1[2]);
+                        orf.setBirthday(split1[3]);
+
                         System.out.println(
-                                fileService.saveRecipient(official_recipient_friend.toString()) ?
+                                fileService.saveRecipient(orf.toString()) ?
                                         "Client saved successfully!" :
-                                        "Something went wrong!"
+                                        "Try again!"
                         );
                         break;
                     case ("Personal"):
-                        personal_Recipient = new Personal_Recipient(
-                                split1[0],
-                                split1[1],
-                                split1[2],
-                                split1[3]
-                        );
+                        PersonalRecipientController prc = new PersonalRecipientController();
+                        Personal_Recipient pr = (Personal_Recipient) prc.create();
+                        pr.setName(split1[0]);
+                        pr.setNickname(split1[1]);
+                        pr.setEmail(split1[2]);
+                        pr.setBirthday(split1[3]);
+
                         System.out.println(
-                                fileService.saveRecipient(personal_Recipient.toString()) ?
+                                fileService.saveRecipient(pr.toString()) ?
                                         "Client saved successfully!" :
-                                        "Something went wrong!"
+                                        "Try again!"
                         );
                         break;
                     default:
-                        System.out.println("Please follow the given format for input!");
+                        printInstructions("Please follow the given format for input!");
                         break;
                 }
 
@@ -533,12 +561,13 @@ public class EmailClient {
                 }
                 break;
             case 3:
-
-                for (String recipient : fileService.getAllRecipients())
+                for (String recipient : fileService.getAllRecipients()) {
                     System.out.println(recipient);
+                }
                 System.out.println();
                 break;
             default:
+                System.out.println("Please enter a given value!");
                 break;
         }
     }
@@ -555,7 +584,12 @@ public class EmailClient {
             System.out.println("Please type the email details according to the given format");
         }
         try {
-            Email email = new Email(emailDetails[0], emailDetails[1], emailDetails[2], dtf.format(now));
+            BasicEmailController bec = new BasicEmailController();
+            Email email = bec.create();
+            email.setRecipient(emailDetails[0]);
+            email.setSubject(emailDetails[1]);
+            email.setContent(emailDetails[2]);
+            email.setSendingDate(dtf.format(now));
 
             if (emailService.sendMail(email)) {
                 System.out.println("Your email was sent successfully!");
@@ -587,15 +621,13 @@ public class EmailClient {
 
         System.out.print("Please enter the birthday of the sent emails: ");
         System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
-        ArrayList<Email> emails = null;
+        ArrayList<Email> emails;
         try {
             emails = fileService.findMail(reader.readLine());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+            emails.forEach(System.out::println);
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        emails.forEach(System.out::println);
     }
 
     private void giveRecipientCount5() {
@@ -612,14 +644,23 @@ public class EmailClient {
         System.exit(0);
     }
 
-    private int giveUserSelectedOption() {
-        int option = 6;
+    private int giveUserSelectedOption(int option) {
         try {
             option = Integer.parseInt(reader.readLine());
         } catch (IOException e) {
             System.out.println("Please enter a valid integer value!");
         }
         return option;
+    }
+
+    private String giveUserInsertedDetails() {
+        String details = null;
+        try {
+            details = reader.readLine();
+        } catch (IOException e) {
+            System.out.println("Your input operation is failed or interpreted!");
+        }
+        return details;
     }
 
     private void selectOptions(int option) {
@@ -648,10 +689,18 @@ public class EmailClient {
         }
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     private void actionController() {
+
         while (true) {
-            printEnterOptionTypeMessage();
-            selectOptions(giveUserSelectedOption());
+            printInstructions("Enter option type: \n"
+                    + "1 - Adding a new recipient\n"
+                    + "2 - Sending an email\n"
+                    + "3 - Printing out all the recipients who have birthdays\n"
+                    + "4 - Printing out details of all the emails sent\n"
+                    + "5 - Printing out the number of recipient objects in the application\n"
+                    + "6 - exit\n");
+            selectOptions(giveUserSelectedOption(6));
         }
     }
 
