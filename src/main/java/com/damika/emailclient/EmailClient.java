@@ -297,7 +297,7 @@ class FileService {
         }
     }
 
-    public @Nullable String[] getAllRecipients() {
+    public @Nullable String @Nullable [] getAllRecipients() {
         if (!Files.exists(clientList)) {
             System.out.println("No Recipient exists!");
             return null;
@@ -319,8 +319,10 @@ class FileService {
         if (recipients == null)
             return null;
         for (String recipient : recipients) {
+            if (recipient == null)
+                continue;
             String recipientEmail = recipient.split(": ")[1].split(",")[1];
-            if (Objects.equals(email, recipientEmail)){
+            if (Objects.equals(email, recipientEmail)) {
                 return recipient;
             }
         }
@@ -334,6 +336,8 @@ class FileService {
         if (allRecipients == null)
             return recipients;
         for (String recipient : allRecipients) {
+            if (recipient == null)
+                continue;
             String[] recipientDetails = recipient.split(": ")[1].split(",");
             if (recipientDetails.length == 4 && recipientDetails[3].equals(bod)) {
                 recipients.add(recipient);
@@ -361,7 +365,8 @@ class FileService {
                 ObjectInputStream ois = new ObjectInputStream(fis)) {
             Email email;
             while ((email = (Email) ois.readObject()) != null) {
-                @Nullable String emailDate = email.getSendingDate();
+                @Nullable
+                String emailDate = email.getSendingDate();
                 if (sentDate.equals(emailDate)) {
                     emails.add(email);
                 }
@@ -374,7 +379,7 @@ class FileService {
 
 /* Email Sending Service */
 class EmailSendingService implements Runnable {
-    public @NonNull boolean sendMail(@NonNull Email email) {
+    public boolean sendMail(@NonNull Email email) {
 
         String sender = "palindrome.penguin.unity.clan@gmail.com";
         String password = "hlfmabeyiopoxzov";
@@ -382,7 +387,6 @@ class EmailSendingService implements Runnable {
         String host = "smtp.gmail.com";
 
         props.put("mail.smtp.starttls.enable", "true");
-
         props.put("mail.smtp.ssl.trust", host);
         props.put("mail.smtp.user", sender);
         props.put("mail.smtp.password", password);
@@ -392,17 +396,27 @@ class EmailSendingService implements Runnable {
         Session session = Session.getDefaultInstance(props);
         MimeMessage message = new MimeMessage(session);
         FileService file_service = new FileService();
+
         try {
+            String recipient = email.getRecipient();
+            String subject = email.getSubject();
+            String content = email.getContent();
+
+            if (recipient == null || subject == null || content == null) {
+                System.out.println("Error: recipient, subject, or content is null. Email not sent.");
+                return false;
+            }
+
             message.setFrom(new InternetAddress(sender));
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(email.getRecipient()));
-            message.setSubject(email.getSubject());
-            message.setText(email.getContent());
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
+            message.setSubject(subject);
+            message.setText(content);
 
             Transport transport = session.getTransport("smtp");
-
             transport.connect(host, sender, password);
             transport.sendMessage(message, message.getAllRecipients());
             transport.close();
+
             file_service.saveEmail(email);
             return true;
         } catch (MessagingException ae) {
@@ -419,11 +433,13 @@ class EmailSendingService implements Runnable {
         FileService file_service = new FileService();
         dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
-        String[] recipients = file_service.getAllRecipients();
+        @Nullable String[] recipients = file_service.getAllRecipients();
         if (recipients == null) {
+            System.out.println("No recipients to process.");
             return;
         }
         for (String s : recipients) {
+            if (s == null) continue;
             String[] split1 = s.split(": ");
             if (split1.length < 2) {
                 System.err.println("Invalid recipient format: " + s);
@@ -465,6 +481,7 @@ public class EmailClient {
     private final @NonNull EmailSendingService emailService;
     private final @NonNull BufferedReader reader;
 
+    @SuppressWarnings("method.invocation")
     public EmailClient() {
         this.fileService = getFileServiceProvider();
         this.emailService = getEmailServiceProvider();
@@ -584,7 +601,13 @@ public class EmailClient {
                 }
                 break;
             case 3:
-                for (String recipient : fileService.getAllRecipients()) {
+                @Nullable String[] recipients = fileService.getAllRecipients();
+                if (recipients == null) {
+                    System.out.println("No recipients found!");
+                    return;
+                }
+                for (String recipient : recipients) {
+                    if (recipient == null) continue;
                     System.out.println(recipient);
                 }
                 System.out.println();
@@ -632,12 +655,20 @@ public class EmailClient {
         System.out.println("Please enter the birthday of the recipients: ");
         System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
         @MonotonicNonNull
-        ArrayList<String> recipients = null;
+        ArrayList<String> recipients = new ArrayList<>();
         try {
-            recipients = fileService.findRecipientsByBOD(reader.readLine());
+            @Nullable String bodInput = reader.readLine();
+            if (bodInput != null) {
+                recipients = fileService.findRecipientsByBOD(bodInput);
+            } else {
+                System.out.println("Input was null. Cannot search for recipients.");
+                return;
+            }
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
+        
         if (recipients.size() == 0) {
             System.out.println("No recipient was found, according to the given birthday!");
         } else {
@@ -651,7 +682,8 @@ public class EmailClient {
         System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
         ArrayList<Email> emails;
         try {
-            @Nullable String input = reader.readLine();
+            @Nullable
+            String input = reader.readLine();
             if (input == null) {
                 System.out.println("Invalid input");
                 return;
@@ -664,9 +696,17 @@ public class EmailClient {
     }
 
     private void giveRecipientCount5() {
-        String[] recipients = fileService.getAllRecipients();
-        System.out.println(recipients == null ? 0 : recipients.length);
-    }
+        @Nullable String[] recipientArrayNullable = fileService.getAllRecipients();
+        if (recipientArrayNullable == null) {
+            System.out.println("No recipients found.");
+            return;
+        }
+    
+        @SuppressWarnings("nullness")
+        String[] recipients = recipientArrayNullable;
+    
+        System.out.println(recipients.length);
+    }    
 
     private void shutdownSystem6() {
         System.out.println("System Shutdown!");
@@ -680,13 +720,18 @@ public class EmailClient {
 
     private int giveUserSelectedOption(int option) {
         try {
-            option = Integer.parseInt(reader.readLine());
-        } catch (IOException e) {
+            @Nullable String input = reader.readLine();
+            if (input != null) {
+                option = Integer.parseInt(input);
+            } else {
+                System.out.println("Input was null. Defaulting to option " + option);
+            }
+        } catch (IOException | NumberFormatException e) {
             System.out.println("Please enter a valid integer value!");
         }
         return option;
     }
-
+    
     private @Nullable String giveUserInsertedDetails() {
         try {
             return reader.readLine();
