@@ -11,31 +11,54 @@ This is a command-line-based Email client that allows users to manage recipients
 - **Object-Oriented Design**: Implements **Factory Method Pattern** for recipient and email creation.
 - **Error Handling**: Includes robust error handling for file I/O and email operations.
 
-## **How to Run in VS Code**
-### **1. Install Java and VS Code Extensions**
-Ensure you have:
-- Java installed (`JDK 8` or later).
-- VS Code with the **"Extension Pack for Java"**.
+## **How to Run the Project**
 
-### **2. Compile and Run the Project**
-#### **Compile Java Files into `out/` Folder**
-```sh
-javac -cp "Lib/javax.mail.jar" -d out $(find src -name "*.java")
-```
-*(For Windows, use `dir /s /b src\*.java` instead of `find`.)*
+### **1. Prerequisites**
+- Java JDK 8 or higher
+- [Apache Maven](https://maven.apache.org/)
+- (Optional) [VS Code with Java Extension Pack](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack)
 
-#### **Run the Program**
-```sh
-java -cp "Lib/javax.mail.jar:out" EmailClient
+---
+
+### **2. Build the Project**
+From the project root directory, run:
+
+```bash
+mvn clean package
 ```
-*(For Windows, use `;` instead of `:` in classpath.)*
+
+This compiles the code and creates a JAR file in the `target/` directory.
+
+---
+
+### **3. Run the Program**
+
+#### **Option A: Using Maven (Recommended)**
+Make sure you’ve added the `exec-maven-plugin` in `pom.xml`, then run:
+```bash
+mvn exec:java
+```
+
+#### **Option B: Run the JAR Manually**
+```bash
+java -cp target/email-client-1.0-SNAPSHOT.jar com.damika.emailclient.EmailClient
+```
+
+> ⚠️ Ensure that `ClientList.txt` and `EmailList.txt` are in a writable location such as a `data/` folder if you're modifying them at runtime.
+
+---
 
 ## **Dependencies**
 - **Java Development Kit (JDK)**
-- **[javax.mail](https://javaee.github.io/javamail/) library** (`javax.mail.jar` included)
+- **[javax.mail](https://javaee.github.io/javamail/)** for email functionality
+- **Maven** for build automation
+
+---
 
 ## **License**
 This project is licensed under the **[MIT License](LICENSE)**.
+
+---
 
 ## **Acknowledgments**
 Created as part of **IN20-S2-CS1040 - Program Construction, University of Moratuwa**, under the guidance of **Dr. (Ms) Surangika Ranathunga**.

@@ -691,7 +691,7 @@ package com.damika.emailclient;
      private void actionController() {
  
          while (true) {
-             printInstructions("Enter option type: \n"
+             printInstructions("\n Enter option type: \n"
                      + "1 - Adding a new recipient\n"
                      + "2 - Sending an email\n"
                      + "3 - Printing out all the recipients who have birthdays\n"
