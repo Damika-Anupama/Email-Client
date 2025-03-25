@@ -269,6 +269,18 @@ package com.damika.emailclient;
      }
  }
  
+ /* Custom Object Serialization */
+class AppendableObjectOutputStream extends ObjectOutputStream {
+    public AppendableObjectOutputStream(OutputStream out) throws IOException {
+        super(out);
+    }
+
+    @Override
+    protected void writeStreamHeader() throws IOException {
+        // Do NOT write a header — needed for appending
+        reset();
+    }
+}
  /*File Service*/
  class FileService {
      // path can be absolute or relative.
@@ -293,7 +305,11 @@ package com.damika.emailclient;
                  StandardOpenOption.APPEND,
                  StandardOpenOption.CREATE
          )) {
-             writer.write("\n" + recipient);
+
+            if (Files.size(clientList) > 0) {
+                writer.write("\n");  // Only write newline if file already has content
+            }
+            writer.write(recipient);
              System.out.println("Successfully inserted the recipient!");
              return true;
          } catch (IOException e) {
@@ -310,7 +326,7 @@ package com.damika.emailclient;
          try {
              byte[] bytes = Files.readAllBytes(clientList);
              String recipientFileData = new String(bytes);
-             return recipientFileData.split("\n");
+             return recipientFileData.split("\\R");
          } catch (IOException e) {
              System.out.println("There is a failure during reading the recipients, Please contact the developer!");
              return null;
@@ -320,9 +336,15 @@ package com.damika.emailclient;
      // to find the same email address has been input before
      public String findRecipientByEmailAddress(String email) {
          for (String recipient : getAllRecipients()) {
-             String recipientEmail = recipient.split(": ")[1].split(",")[1];
-             if (email.equals(recipientEmail)) {
-                 return recipient;
+            String[] parts = recipient.split(": ");
+            if (parts.length < 2) continue;
+            
+            String[] fields = parts[1].split(",");
+            if (fields.length < 2) continue;
+            
+            String recipientEmail = fields[1];                
+            if (Objects.equals(email, recipientEmail)) {
+                return recipient;
              }
          }
          return null;
@@ -341,30 +363,51 @@ package com.damika.emailclient;
  
      /*Email Service <- uses serialization*/
      public boolean saveEmail(Email email) {
-         boolean result = false;
-         try (FileOutputStream fileStream = new FileOutputStream(String.valueOf(emailList));
-              ObjectOutputStream os = new ObjectOutputStream(fileStream)){
-             os.writeObject(email);
-             result = true;
-         } catch (IOException e) {
-             e.printStackTrace();
-         }
-         return result;
+        boolean result = false;
+        boolean append = Files.exists(emailList);
+    
+        try (FileOutputStream fos = new FileOutputStream(String.valueOf(emailList), true);
+             ObjectOutputStream oos = append
+                     ? new AppendableObjectOutputStream(fos)
+                     : new ObjectOutputStream(fos)) {
+    
+            oos.writeObject(email);
+            result = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
      }
  
-     public ArrayList<Email> findMail(String sentDate) throws IOException, ClassNotFoundException {
-         ArrayList<Email> emails = new ArrayList<>();
-         try (FileInputStream fis = new FileInputStream(String.valueOf(emailList));
-              ObjectInputStream ois = new ObjectInputStream(fis)) {
-             Email email;
-             while ((email = (Email) ois.readObject()) != null) {
-                 if (email.getSendingDate().equals(sentDate)) {
-                     emails.add(email);
-                 }
-             }
-         } catch (EOFException e) {
-         }
-         return emails;
+     public ArrayList<Email> findMail(String sentDate) {
+        ArrayList<Email> emails = new ArrayList<>();
+    
+        if (!Files.exists(emailList)) return emails;
+    
+        try (FileInputStream fis = new FileInputStream(String.valueOf(emailList));
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+    
+            while (true) {
+                try {
+                    Object obj = ois.readObject();
+                    if (obj instanceof Email) {
+                        Email email = (Email) obj;
+                        if (sentDate.equals(email.getSendingDate())) {
+                            emails.add(email);
+                        }
+                    }
+                } catch (EOFException eof) {
+                    break; // End of file reached — expected
+                }
+            }
+    
+        } catch (StreamCorruptedException sce) {
+            System.err.println("⚠️ EmailList.txt is corrupted or not in valid serialized format.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    
+        return emails;
      }
  }
  
@@ -388,7 +431,6 @@ package com.damika.emailclient;
  
          Session session = Session.getDefaultInstance(props);
          MimeMessage message = new MimeMessage(session);
-         FileService file_service = new FileService();
          try {
              message.setFrom(new InternetAddress(sender));
              message.addRecipient(Message.RecipientType.TO, new InternetAddress(email.getRecipient()));
@@ -401,7 +443,6 @@ package com.damika.emailclient;
              transport.connect(host, sender, password);
              transport.sendMessage(message, message.getAllRecipients());
              transport.close();
-             file_service.saveEmail(email);
              return true;
          } catch (MessagingException ae) {
              ae.printStackTrace();
@@ -411,30 +452,58 @@ package com.damika.emailclient;
  
      @Override
      public void run() {
-         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd");
-         LocalDateTime now = LocalDateTime.now();
-         String today = dtf.format(now);
-         FileService file_service = new FileService();
-         dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
- 
-         for (String s : file_service.getAllRecipients()) {
-             String[] split1 = s.split(": ");
-             String[] split2 = split1[1].split(",");
-             if (split2.length == 4 && split2[3].substring(5).equals(today)) {
-                 String content = null, type = split1[0];
-                 if (type.equals("Personal")) {
-                     content = "hugs and love on your birthday. Damika";
-                 } else if (type.equals("Office_friend")) {
-                     content = "Wish you a Happy Birthday. Damika";
-                 }
-                 // send the birthday wish from here (from another method)
- 
-                 Email email = new Email(split2[1], "Surprise from Damika", content, dtf.format(now));
-                 sendMail(email);
-                 file_service.saveEmail(email);
-             }
-         }
- 
+        DateTimeFormatter shortFormat = DateTimeFormatter.ofPattern("MM/dd");
+        DateTimeFormatter fullFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        LocalDateTime now = LocalDateTime.now();
+        String todayShort = shortFormat.format(now);
+        String todayFull = fullFormat.format(now);
+    
+        FileService file_service = new FileService();
+        String[] recipients = file_service.getAllRecipients();
+        // Load all previously sent emails
+        ArrayList<Email> previouslySent = file_service.findMail(todayFull);
+    
+        for (String s : recipients) {
+            String[] split1 = s.split(": ");
+            if (split1.length < 2) {
+                System.err.println("Invalid recipient format: " + s);
+                continue;
+            }
+    
+            String type = split1[0];
+            String[] split2 = split1[1].split(",");
+    
+            if ((type.equals("Personal") || type.equals("Office_friend")) && split2.length >= 4) {
+                String birthday = split2[3]; // yyyy/MM/dd
+    
+                if (birthday.length() >= 5 && birthday.substring(5).equals(todayShort)) {
+                    String recipientEmail = split2[1];
+                    String content = type.equals("Personal")
+                            ? "hugs and love on your birthday. Damika"
+                            : "Wish you a Happy Birthday. Damika";
+                    String subject = "Surprise from Damika";
+    
+                    // Check if already sent today
+                    boolean alreadySent = previouslySent.stream().anyMatch(mail ->
+                            subject.equals(mail.getSubject()) &&
+                            recipientEmail.equals(mail.getRecipient()) &&
+                            todayFull.equals(mail.getSendingDate())
+                    );
+    
+                    if (!alreadySent) {
+                        Email email = new Email(recipientEmail, subject, content, todayFull);
+                        if (sendMail(email)) {
+                            System.out.println("🎉 Today is " + split2[0] + "'s birthday! 🎂");
+                            System.out.println("Email sent to " + recipientEmail + ":\nSubject: " + subject + "\nMessage: " + content + "\n");
+                            file_service.saveEmail(email); // Save after sending
+                        }
+                    } else {
+                        System.out.println("✅ Birthday email already sent to " + recipientEmail + " today.");
+                    }
+                }
+            }
+        }
+        System.out.println("✅ Birthday checking complete.");
      }
  }
  
@@ -520,7 +589,7 @@ package com.damika.emailclient;
      private void addNewCustomer1() {
          printInstructions("Enter 1: if you want to add a new recipient\n" +
                  "Enter 2: If you want to get a specified recipient by email\n" +
-                 "Enter 3: If you want to get all the recipients");
+                 "Enter 3: If you want to get all the recipients\n");
          int input = giveUserSelectedOption(0);
  
          switch (input) {
@@ -535,13 +604,40 @@ package com.damika.emailclient;
  
                  String recipientDetails = giveUserInsertedDetails();
  
-                 try {
-                     split = recipientDetails.split(": ");
-                     split1 = split[1].split(",");
-                 } catch (ArrayIndexOutOfBoundsException e) {
-                     System.out.println("Please Enter according to the correct format!");
-                 }
- 
+                 if (!recipientDetails.contains(": ")) {
+                    System.out.println("Invalid format. Missing ': ' separator. Please follow the correct format.");
+                    return;
+                }
+                
+                split = recipientDetails.split(": ");
+                if (split.length != 2) {
+                    System.out.println("Invalid format. Expected one ':' to separate type and details.");
+                    return;
+                }
+                
+                split1 = split[1].split(",");
+                
+                // Validate recipient type and number of fields
+                String type = split[0];
+                int expectedLength;
+                switch (type) {
+                    case "Official":
+                        expectedLength = 3;
+                        break;
+                    case "Office_friend":
+                    case "Personal":
+                        expectedLength = 4;
+                        break;
+                    default:
+                        System.out.println("Unknown recipient type. Use 'Official', 'Office_friend', or 'Personal'.");
+                        return;
+                }
+                
+                if (split1.length != expectedLength) {
+                    System.out.println("Invalid number of details for type '" + type + "'. Expected " + expectedLength + " fields.");
+                    return;
+                }
+                  
                  switch (split[0]) {
                      case ("Official"):
                          saveOfficialRecipient(split1);
@@ -617,19 +713,20 @@ package com.damika.emailclient;
  
      private void printEmails4() {
  
-         System.out.print("Please enter the birthday of the sent emails: ");
+         System.out.print("Please enter the date when the emails were sent: ");
          System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
          ArrayList<Email> emails;
          try {
              emails = fileService.findMail(reader.readLine());
              emails.forEach(System.out::println);
-         } catch (IOException | ClassNotFoundException e) {
-             e.printStackTrace();
+         } catch (IOException e) {
+            System.out.println("Error reading input or retrieving email list.");
+            e.printStackTrace();
          }
      }
  
      private void giveRecipientCount5() {
-         System.out.println(fileService.getAllRecipients().length);
+         System.out.println("Number of recipients: " + fileService.getAllRecipients().length);
      }
  
      private void shutdownSystem6() {
@@ -642,13 +739,27 @@ package com.damika.emailclient;
          System.exit(0);
      }
  
-     private int giveUserSelectedOption(int option) {
-         try {
-             option = Integer.parseInt(reader.readLine());
-         } catch (IOException e) {
-             System.out.println("Please enter a valid integer value!");
-         }
-         return option;
+     private int giveUserSelectedOption(int defaultOption) {
+        while (true) {
+            System.out.println("Please enter your option in valid range!");
+            try {
+                String input = reader.readLine();
+                if (input == null || input.trim().isEmpty()) {
+                    System.out.println("Input was empty. Try again.");
+                    continue;
+                }
+    
+                int option = Integer.parseInt(input.trim());
+                if (option >= 1 && option <= 6) {
+                    return option;
+                } else {
+                    System.out.println("Please enter a number between 1 and 6.");
+                }
+    
+            } catch (IOException | NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid integer.");
+            }
+        }
      }
  
      private String giveUserInsertedDetails() {
@@ -681,6 +792,7 @@ package com.damika.emailclient;
                  break;
              case 6:
                  shutdownSystem6();
+                 break;
              default:
                  System.out.println("Please enter a relevant number to proceed !");
                  break;
@@ -696,7 +808,7 @@ package com.damika.emailclient;
                      + "2 - Sending an email\n"
                      + "3 - Printing out all the recipients who have birthdays\n"
                      + "4 - Printing out details of all the emails sent\n"
-                     + "5 - Printing out the number of recipient objects in the application\n"
+                     + "5 - Printing out the number of recipients in this application\n"
                      + "6 - exit\n");
              selectOptions(giveUserSelectedOption(6));
          }
