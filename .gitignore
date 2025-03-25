@@ -5,3 +5,7 @@ out/
 # Java build output
 target/
 *.class
+
+# Ignore runtime data files
+data/ClientList.txt
+data/EmailList.txt
