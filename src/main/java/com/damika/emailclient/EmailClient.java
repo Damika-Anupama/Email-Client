@@ -266,6 +266,18 @@ class BasicEmailController extends EmailController {
     }
 }
 
+/* Custom Object Serialization */
+class AppendableObjectOutputStream extends ObjectOutputStream {
+    public AppendableObjectOutputStream(OutputStream out) throws IOException {
+        super(out);
+    }
+
+    @Override
+    protected void writeStreamHeader() throws IOException {
+        // Do NOT write a header — needed for appending
+        reset();
+    }
+}
 /* File Service */
 class FileService {
     // path can be absolute or relative.
@@ -288,7 +300,11 @@ class FileService {
                 StandardCharsets.UTF_8,
                 StandardOpenOption.APPEND,
                 StandardOpenOption.CREATE)) {
-            writer.write("\n" + recipient);
+
+            if (Files.size(clientList) > 0) {
+                    writer.write("\n");  // Only write newline if file already has content
+                }
+            writer.write(recipient);
             System.out.println("Successfully inserted the recipient!");
             return true;
         } catch (IOException e) {
@@ -305,7 +321,7 @@ class FileService {
         try {
             byte[] bytes = Files.readAllBytes(clientList);
             String recipientFileData = new String(bytes);
-            return recipientFileData.split("\n");
+            return recipientFileData.split("\\R");
         } catch (IOException e) {
             System.out.println("There is a failure during reading the recipients, Please contact the developer!");
             return null;
@@ -319,9 +335,15 @@ class FileService {
         if (recipients == null)
             return null;
         for (String recipient : recipients) {
-            if (recipient == null)
-                continue;
-            String recipientEmail = recipient.split(": ")[1].split(",")[1];
+            if (recipient == null) continue;
+
+            String[] parts = recipient.split(": ");
+            if (parts.length < 2) continue;
+            
+            String[] fields = parts[1].split(",");
+            if (fields.length < 2) continue;
+            
+            String recipientEmail = fields[1];                
             if (Objects.equals(email, recipientEmail)) {
                 return recipient;
             }
@@ -339,7 +361,7 @@ class FileService {
             if (recipient == null)
                 continue;
             String[] recipientDetails = recipient.split(": ")[1].split(",");
-            if (recipientDetails.length == 4 && recipientDetails[3].equals(bod)) {
+            if (recipientDetails.length == 4 && recipientDetails[3].trim().equals(bod.trim())) {
                 recipients.add(recipient);
             }
         }
@@ -349,9 +371,14 @@ class FileService {
     /* Email Service <- uses serialization */
     public boolean saveEmail(@NonNull Email email) {
         boolean result = false;
-        try (FileOutputStream fileStream = new FileOutputStream(String.valueOf(emailList));
-                ObjectOutputStream os = new ObjectOutputStream(fileStream)) {
-            os.writeObject(email);
+        boolean append = Files.exists(emailList);
+    
+        try (FileOutputStream fos = new FileOutputStream(String.valueOf(emailList), true);
+             ObjectOutputStream oos = append
+                     ? new AppendableObjectOutputStream(fos)
+                     : new ObjectOutputStream(fos)) {
+    
+            oos.writeObject(email);
             result = true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -359,20 +386,34 @@ class FileService {
         return result;
     }
 
-    public @NonNull ArrayList<Email> findMail(@NonNull String sentDate) throws IOException, ClassNotFoundException {
+    public @NonNull ArrayList<Email> findMail(@NonNull String sentDate) {
         ArrayList<Email> emails = new ArrayList<>();
+    
+        if (!Files.exists(emailList)) return emails;
+    
         try (FileInputStream fis = new FileInputStream(String.valueOf(emailList));
-                ObjectInputStream ois = new ObjectInputStream(fis)) {
-            Email email;
-            while ((email = (Email) ois.readObject()) != null) {
-                @Nullable
-                String emailDate = email.getSendingDate();
-                if (sentDate.equals(emailDate)) {
-                    emails.add(email);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+    
+            while (true) {
+                try {
+                    Object obj = ois.readObject();
+                    if (obj instanceof Email) {
+                        Email email = (Email) obj;
+                        if (sentDate.equals(email.getSendingDate())) {
+                            emails.add(email);
+                        }
+                    }
+                } catch (EOFException eof) {
+                    break; // End of file reached — expected
                 }
             }
-        } catch (EOFException ignored) {
+    
+        } catch (StreamCorruptedException sce) {
+            System.err.println("⚠️ EmailList.txt is corrupted or not in valid serialized format.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
+    
         return emails;
     }
 }
@@ -395,7 +436,6 @@ class EmailSendingService implements Runnable {
 
         Session session = Session.getDefaultInstance(props);
         MimeMessage message = new MimeMessage(session);
-        FileService file_service = new FileService();
 
         try {
             String recipient = email.getRecipient();
@@ -417,7 +457,6 @@ class EmailSendingService implements Runnable {
             transport.sendMessage(message, message.getAllRecipients());
             transport.close();
 
-            file_service.saveEmail(email);
             return true;
         } catch (MessagingException ae) {
             ae.printStackTrace();
@@ -427,44 +466,66 @@ class EmailSendingService implements Runnable {
 
     @Override
     public void run() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd");
+        DateTimeFormatter shortFormat = DateTimeFormatter.ofPattern("MM/dd");
+        DateTimeFormatter fullFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         LocalDateTime now = LocalDateTime.now();
-        String today = dtf.format(now);
+        String todayShort = shortFormat.format(now);
+        String todayFull = fullFormat.format(now);
+    
         FileService file_service = new FileService();
-        dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-
         @Nullable String[] recipients = file_service.getAllRecipients();
+    
         if (recipients == null) {
             System.out.println("No recipients to process.");
             return;
         }
+    
+        // Load all previously sent emails
+        ArrayList<Email> previouslySent = file_service.findMail(todayFull);
+    
         for (String s : recipients) {
             if (s == null) continue;
+    
             String[] split1 = s.split(": ");
             if (split1.length < 2) {
                 System.err.println("Invalid recipient format: " + s);
-                continue; // Skip this recipient and move to the next one
+                continue;
             }
+    
+            String type = split1[0];
             String[] split2 = split1[1].split(",");
-            if (split2.length < 4) {
-                System.err.println("Invalid recipient details: " + Arrays.toString(split2));
-                continue; // Skip this recipient and move to the next one
-            }
-            if (split2[3].substring(5).equals(today)) {
-                String content = null, type = split1[0];
-                if (type.equals("Personal")) {
-                    content = "hugs and love on your birthday. Damika";
-                } else if (type.equals("Office_friend")) {
-                    content = "Wish you a Happy Birthday. Damika";
+    
+            if ((type.equals("Personal") || type.equals("Office_friend")) && split2.length >= 4) {
+                String birthday = split2[3]; // yyyy/MM/dd
+    
+                if (birthday.length() >= 5 && birthday.substring(5).equals(todayShort)) {
+                    String recipientEmail = split2[1];
+                    String content = type.equals("Personal")
+                            ? "hugs and love on your birthday. Damika"
+                            : "Wish you a Happy Birthday. Damika";
+                    String subject = "Surprise from Damika";
+    
+                    // Check if already sent today
+                    boolean alreadySent = previouslySent.stream().anyMatch(mail ->
+                            subject.equals(mail.getSubject()) &&
+                            recipientEmail.equals(mail.getRecipient()) &&
+                            todayFull.equals(mail.getSendingDate())
+                    );
+    
+                    if (!alreadySent) {
+                        Email email = new Email(recipientEmail, subject, content, todayFull);
+                        if (sendMail(email)) {
+                            System.out.println("🎉 Today is " + split2[0] + "'s birthday! 🎂");
+                            System.out.println("Email sent to " + recipientEmail + ":\nSubject: " + subject + "\nMessage: " + content + "\n");
+                            file_service.saveEmail(email); // Save after sending
+                        }
+                    } else {
+                        System.out.println("✅ Birthday email already sent to " + recipientEmail + " today.");
+                    }
                 }
-                // send the birthday wish from here (from another method)
-
-                Email email = new Email(split2[1], "Surprise from Damika", content, dtf.format(now));
-                sendMail(email);
-                file_service.saveEmail(email);
             }
         }
-
+        System.out.println("✅ Birthday checking complete.");
     }
 }
 
@@ -548,7 +609,7 @@ public class EmailClient {
     private void addNewCustomer1() {
         printInstructions("Enter 1: if you want to add a new recipient\n" +
                 "Enter 2: If you want to get a specified recipient by email\n" +
-                "Enter 3: If you want to get all the recipients");
+                "Enter 3: If you want to get all the recipients\n");
         int input = giveUserSelectedOption(0);
 
         switch (input) {
@@ -569,11 +630,38 @@ public class EmailClient {
                     return;
                 }
 
-                try {
-                    split = recipientDetails.split(": ");
-                    split1 = split[1].split(",");
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    System.out.println("Please Enter according to the correct format!");
+                if (!recipientDetails.contains(": ")) {
+                    System.out.println("Invalid format. Missing ': ' separator. Please follow the correct format.");
+                    return;
+                }
+                
+                split = recipientDetails.split(": ");
+                if (split.length != 2) {
+                    System.out.println("Invalid format. Expected one ':' to separate type and details.");
+                    return;
+                }
+                
+                split1 = split[1].split(",");
+                
+                // Validate recipient type and number of fields
+                String type = split[0];
+                int expectedLength;
+                switch (type) {
+                    case "Official":
+                        expectedLength = 3;
+                        break;
+                    case "Office_friend":
+                    case "Personal":
+                        expectedLength = 4;
+                        break;
+                    default:
+                        System.out.println("Unknown recipient type. Use 'Official', 'Office_friend', or 'Personal'.");
+                        return;
+                }
+                
+                if (split1.length != expectedLength) {
+                    System.out.println("Invalid number of details for type '" + type + "'. Expected " + expectedLength + " fields.");
+                    return;
                 }
 
                 switch (split[0]) {
@@ -602,7 +690,7 @@ public class EmailClient {
                 break;
             case 3:
                 @Nullable String[] recipients = fileService.getAllRecipients();
-                if (recipients == null) {
+                if (recipients == null || recipients.length == 0) {
                     System.out.println("No recipients found!");
                     return;
                 }
@@ -678,7 +766,7 @@ public class EmailClient {
 
     private void printEmails4() {
 
-        System.out.print("Please enter the birthday of the sent emails: ");
+        System.out.print("Please enter the date when the emails were sent: ");
         System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
         ArrayList<Email> emails;
         try {
@@ -690,7 +778,8 @@ public class EmailClient {
             }
             emails = fileService.findMail(input);
             emails.forEach(System.out::println);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+            System.out.println("Error reading input or retrieving email list.");
             e.printStackTrace();
         }
     }
@@ -704,7 +793,7 @@ public class EmailClient {
     
         @SuppressWarnings("nullness")
         String[] recipients = recipientArrayNullable;
-    
+        System.out.println("Number of recipients: ");
         System.out.println(recipients.length);
     }    
 
@@ -718,18 +807,27 @@ public class EmailClient {
         System.exit(0);
     }
 
-    private int giveUserSelectedOption(int option) {
-        try {
-            @Nullable String input = reader.readLine();
-            if (input != null) {
-                option = Integer.parseInt(input);
-            } else {
-                System.out.println("Input was null. Defaulting to option " + option);
+    private int giveUserSelectedOption(int defaultOption) {
+        while (true) {
+            System.out.println("Please enter your option in valid range!");
+            try {
+                @Nullable String input = reader.readLine();
+                if (input == null || input.trim().isEmpty()) {
+                    System.out.println("Input was empty. Try again.");
+                    continue;
+                }
+    
+                int option = Integer.parseInt(input.trim());
+                if (option >= 1 && option <= 6) {
+                    return option;
+                } else {
+                    System.out.println("Please enter a number between 1 and 6.");
+                }
+    
+            } catch (IOException | NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid integer.");
             }
-        } catch (IOException | NumberFormatException e) {
-            System.out.println("Please enter a valid integer value!");
         }
-        return option;
     }
     
     private @Nullable String giveUserInsertedDetails() {
@@ -777,7 +875,7 @@ public class EmailClient {
                     + "2 - Sending an email\n"
                     + "3 - Printing out all the recipients who have birthdays\n"
                     + "4 - Printing out details of all the emails sent\n"
-                    + "5 - Printing out the number of recipient objects in the application\n"
+                    + "5 - Printing out the number of recipients in this application\n"
                     + "6 - exit\n");
             selectOptions(giveUserSelectedOption(6));
         }
