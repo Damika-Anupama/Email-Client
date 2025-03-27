@@ -28,7 +28,7 @@ This is a **Java-based command-line email client** designed to manage recipients
   Code is modular and adheres to object-oriented best practices.
 
 - 🦺 **Null Safety**  
-  Leverages the **Checker Framework** with `@NonNull`, `@Nullable`, etc., for safer code via nullness annotations.
+  Leverages the [**Checker Framework**](https://checkerframework.org/manual) with `@NonNull`, `@Nullable`, etc., for safer code via nullness annotations.
 
 - 🛡️ **Error Handling**  
   Handles file I/O errors, malformed inputs, email configuration issues, etc.
@@ -76,16 +76,55 @@ mvn exec:java -Dexec.mainClass="com.damika.emailclient.EmailClient"
 
 ```
 .
-├── data/
-│   ├── ClientList.txt      # Stores recipient records
-│   └── EmailList.txt       # Serialized sent email data
+├── Assignment.txt
+├── data
+│   ├── ClientList.txt
+│   └── EmailList.txt
+├── LICENSE
 ├── pom.xml
-├── src/
-│   └── main/
-│       └── java/
-│           └── com/damika/emailclient/
-│               └── EmailClient.java   # Entry point
-└── README.md
+├── Readme.md
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── com
+    │   │       └── damika
+    │   │           └── emailclient
+    │   │               ├── EmailClient.java
+    │   │               ├── factory
+    │   │               │   ├── EmailController.java
+    │   │               │   ├── implementations
+    │   │               │   │   ├── BasicEmailController.java
+    │   │               │   │   ├── EmailCreator.java
+    │   │               │   │   ├── OfficialRecipientController.java
+    │   │               │   │   ├── OfficialRecipientCreator.java
+    │   │               │   │   ├── OfficialRecipientFriendController.java
+    │   │               │   │   ├── OfficialRecipientFriendCreator.java
+    │   │               │   │   ├── PersonalRecipientController.java
+    │   │               │   │   └── PersonalRecipientCreator.java
+    │   │               │   ├── NewEmailCreator.java
+    │   │               │   ├── NewRecipientCreator.java
+    │   │               │   └── RecipientController.java
+    │   │               ├── handler
+    │   │               │   └── GlobalExceptionHandler.java
+    │   │               ├── model
+    │   │               │   ├── Email.java
+    │   │               │   ├── Official_Recipient_Friend.java
+    │   │               │   ├── Official_Recipient.java
+    │   │               │   ├── Personal_Recipient.java
+    │   │               │   └── Recipient.java
+    │   │               ├── service
+    │   │               │   ├── EmailSendingService.java
+    │   │               │   └── FileService.java
+    │   │               └── util
+    │   │                   └── AppendableObjectOutputStream.java
+    │   └── resources
+    │       └── application.properties
+    └── test
+        └── java
+            └── com
+                └── damika
+                    └── emailclient
+                        └── AppTest.java
 ```
 
 
