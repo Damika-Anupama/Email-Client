@@ -154,7 +154,12 @@ public class FileService {
 
     public boolean saveEmail(@NonNull Email email) {
         boolean result = false;
-        boolean append = Files.exists(emailList);
+        boolean append = false;
+        try {
+            append = Files.exists(emailList) && Files.size(emailList) > 0;
+        } catch (IOException e) {
+            System.err.println("Error checking file size: " + e.getMessage());
+        }
 
         try (FileOutputStream fos = new FileOutputStream(String.valueOf(emailList), true);
                 ObjectOutputStream oos = append
@@ -203,6 +208,7 @@ public class FileService {
 
             }
         } catch (StreamCorruptedException sce) {
+            System.out.println(sce);
             System.err.println("⚠️ EmailList.txt is corrupted or not in valid serialized format.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

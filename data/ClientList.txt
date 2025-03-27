@@ -1,11 +1,4 @@
 Official: Nimal,nimal@gmail.com,ceo
 Office_friend: kamal,kamal@gmail.com,clerk,2000/09/08
 Personal: sunil,sunil@gmail.com,bothale,2000/08/03
-Personal: damika,damikaanupama@gmail.com,damia,2000/03/25
-Official: Tharindu,tharindu.silva@abc.com,manager 
-Office_friend: Ishara,ishara.perera@xyz.com,executive,1998/07/15 
-Personal: Dinesh,dinesh123@gmail.com,dino,1999/12/21 
-Office_friend: Ruwan,ruwan.kumara@workplace.com,supervisor,1990/04/22
-Official: Harsha,harsha.jayasinghe@corp.com,director
-Office_friend: Lasith,lasith.kumar@bizmail.com,engineer,1995/11/05
-Personal: Nadeesha,nadeesha.fernando@gmail.com,neesha,1997/02/14
+Personal: damika,damikaanupama@gmail.com,damia,2000/03/27
