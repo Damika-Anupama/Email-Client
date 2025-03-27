@@ -69,7 +69,9 @@ public class Email implements Serializable {
 
     @Override
     public String toString() {
-        return "Email{recipient='" + recipient + "', subject='" + subject + "', content='" + content
-                + "', sendingDate='" + sendingDate + "'}";
+        return "recipient=" + recipient +
+                ", subject=" + subject +
+                ", content=" + content +
+                ", sentDateTime=" + sendingDate;
     }
 }

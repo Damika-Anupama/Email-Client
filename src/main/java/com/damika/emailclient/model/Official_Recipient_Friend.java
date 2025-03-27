@@ -24,8 +24,10 @@ public class Official_Recipient_Friend extends Official_Recipient {
     @Override
     @SuppressWarnings("nullness")
     public String toString() {
-        return "Official_Recipient_Friend{name='" + getName() + "', email='" + getEmail() + "', designation='"
-                + getDesignation() + "', birthday='" + birthday + "'}";
+        return "Office_friend: " +
+                getName() + ',' +
+                getEmail() + ',' +
+                getDesignation() + ',' +
+                birthday;
     }
 }
-

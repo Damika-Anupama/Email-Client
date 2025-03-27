@@ -40,8 +40,10 @@ public class Personal_Recipient extends Recipient {
     @Override
     @SuppressWarnings("nullness")
     public String toString() {
-        return "Personal_Recipient{name='" + getName() + "', email='" + getEmail() + "', nickname='" + nickname
-                + "', birthday='" + birthday + "'}";
+        return "Personal: " +
+                getName() + ',' +
+                nickname + ',' +
+                getEmail() + ',' +
+                birthday;
     }
 }
-

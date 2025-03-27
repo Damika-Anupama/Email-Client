@@ -28,14 +28,16 @@ public class FileService {
     static {
         try {
             if (!Files.exists(clientList)) {
-                @Nullable Path clientListParent = clientList.getParent();
+                @Nullable
+                Path clientListParent = clientList.getParent();
                 if (clientListParent != null) {
                     Files.createDirectories(clientListParent);
                 }
                 Files.createFile(clientList);
             }
             if (!Files.exists(emailList)) {
-                @Nullable Path emailListParent = emailList.getParent();
+                @Nullable
+                Path emailListParent = emailList.getParent();
                 if (emailListParent != null) {
                     Files.createDirectories(emailListParent);
                 }
@@ -48,13 +50,31 @@ public class FileService {
 
     /* Recipient Service */
     public boolean saveRecipient(@NonNull String recipient) {
+        // Validate basic format
+        String[] parts = recipient.split(": ");
+        if (parts.length != 2) {
+            System.out.println("Invalid format. Must contain a single ': ' to separate type and details.");
+            return false;
+        }
+
+        String[] fields = parts[1].split(",");
+        if (fields.length < 2) {
+            System.out.println("Invalid format. Not enough fields after ': '.");
+            return false;
+        }
+
         @Nullable
-        String existing = findRecipientByEmailAddress(recipient.split(": ")[1].split(",")[1]);
+        String email = fields[1].trim();
+
+        // Check if email already exists
+        @Nullable
+        String existing = findRecipientByEmailAddress(email);
         if (Files.exists(clientList) && existing != null) {
             System.out.println("This user already exists!");
             return false;
         }
 
+        // Save to file
         try (BufferedWriter writer = Files.newBufferedWriter(
                 clientList,
                 StandardCharsets.UTF_8,
@@ -68,7 +88,7 @@ public class FileService {
             System.out.println("Successfully inserted the recipient!");
             return true;
         } catch (IOException e) {
-            System.out.println("One of relevant files doesn't exists, Please contact the developer!");
+            System.out.println("File I/O error: " + e.getMessage());
             return false;
         }
     }
@@ -151,20 +171,20 @@ public class FileService {
 
     public @NonNull ArrayList<@NonNull Email> findMail(@NonNull String sentDate) {
         ArrayList<@NonNull Email> emails = new ArrayList<>();
-    
+
         if (!Files.exists(emailList)) {
             return emails; // File does not exist, return empty list
         }
-    
+
         try {
             // Check if the file is empty
             if (Files.size(emailList) == 0) {
                 return emails;
             }
-    
+
             try (FileInputStream fis = new FileInputStream(String.valueOf(emailList));
-                 ObjectInputStream ois = new ObjectInputStream(fis)) {
-    
+                    ObjectInputStream ois = new ObjectInputStream(fis)) {
+
                 while (true) {
                     try {
                         Object obj = ois.readObject();
@@ -180,15 +200,14 @@ public class FileService {
                         break; // End of file reached — expected
                     }
                 }
-    
+
             }
         } catch (StreamCorruptedException sce) {
             System.err.println("⚠️ EmailList.txt is corrupted or not in valid serialized format.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-    
+
         return emails;
     }
 }
-

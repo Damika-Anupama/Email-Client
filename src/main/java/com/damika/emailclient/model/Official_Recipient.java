@@ -24,7 +24,9 @@ public class Official_Recipient extends Recipient {
     @Override
     @SuppressWarnings("nullness")
     public String toString() {
-        return "Official_Recipient{name='" + getName() + "', email='" + getEmail() + "', designation='" + designation
-                + "'}";
+        return "Official: " +
+                getName() + ',' +
+                getEmail() + ',' +
+                designation;
     }
 }
