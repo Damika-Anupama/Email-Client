@@ -11,6 +11,13 @@ public class Official_Recipient_Friend extends Official_Recipient {
     public Official_Recipient_Friend() {
     }
 
+    @EnsuresNonNull({ "this.name", "this.email", "this.designation", "this.birthday" })
+    public void initialize(@NonNull String name, @NonNull String email, @NonNull String designation,
+            @NonNull String birthday) {
+        super.initialize(name, email, designation);
+        this.birthday = birthday;
+    }
+
     @EnsuresNonNull("this.birthday")
     public void setBirthday(@NonNull String birthday) {
         this.birthday = birthday;

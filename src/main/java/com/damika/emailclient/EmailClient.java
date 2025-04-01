@@ -59,36 +59,57 @@ public class EmailClient {
                 fileService.saveRecipient(data) ? "Client saved successfully!" : "Try again!");
     }
 
-    private void saveOfficialRecipient(@NonNull String[] split1) {
-        OfficialRecipientController orc = new OfficialRecipientController();
-        Official_Recipient or = (Official_Recipient) orc.create();
+    private void saveRecipientByType(@NonNull String type, @NonNull String[] details) {
+        int expectedLength;
+        switch (type) {
+            case "Official":
+                expectedLength = 3;
+                break;
+            case "Office_friend":
+            case "Personal":
+                expectedLength = 4;
+                break;
+            default:
+                System.out.println("Unknown recipient type. Use 'Official', 'Office_friend', or 'Personal'.");
+                return;
+        }
 
-        or.setName(split1[0]);
-        or.setEmail(split1[1]);
-        or.setDesignation(split1[2]);
-        saveRecipient(or.toString());
+        if (details.length != expectedLength) {
+            System.out.println(
+                    "Invalid number of details for type '" + type + "'. Expected " + expectedLength + " fields.");
+            return;
+        }
+
+        Object recipient = createRecipient(type, details);
+        if (recipient != null) {
+            saveRecipient(recipient.toString());
+        }
     }
 
-    private void saveOfficialFriendRecipient(@NonNull String[] split1) {
-        OfficialRecipientFriendController orfc = new OfficialRecipientFriendController();
-        Official_Recipient_Friend orf = (Official_Recipient_Friend) orfc.create();
-        orf.setName(split1[0]);
-        orf.setEmail(split1[1]);
-        orf.setDesignation(split1[2]);
-        orf.setBirthday(split1[3]);
+    private @Nullable Object createRecipient(@NonNull String type, @NonNull String[] details) {
+        switch (type) {
+            case "Official":
+                OfficialRecipientController orc = new OfficialRecipientController();
+                Official_Recipient or = (Official_Recipient) orc.create();
+                or.initialize(details[0], details[1], details[2]);
+                return or;
 
-        saveRecipient(orf.toString());
-    }
+            case "Office_friend":
+                OfficialRecipientFriendController orfc = new OfficialRecipientFriendController();
+                Official_Recipient_Friend orf = (Official_Recipient_Friend) orfc.create();
+                orf.initialize(details[0], details[1], details[2], details[3]);
+                return orf;
 
-    private void savePersonalRecipient(@NonNull String[] split1) {
-        PersonalRecipientController prc = new PersonalRecipientController();
-        Personal_Recipient pr = (Personal_Recipient) prc.create();
-        pr.setName(split1[0]);
-        pr.setNickname(split1[1]);
-        pr.setEmail(split1[2]);
-        pr.setBirthday(split1[3]);
+            case "Personal":
+                PersonalRecipientController prc = new PersonalRecipientController();
+                Personal_Recipient pr = (Personal_Recipient) prc.create();
+                pr.initialize(details[0], details[1], details[2], details[3]);
+                return pr;
 
-        saveRecipient(pr.toString());
+            default:
+                System.out.println("Unknown recipient type. Cannot create recipient.");
+                return null;
+        }
     }
 
     private void addNewCustomer1() {
@@ -128,7 +149,6 @@ public class EmailClient {
 
                 split1 = split[1].split(",");
 
-                // Validate recipient type and number of fields
                 String type = split[0];
                 int expectedLength;
                 switch (type) {
@@ -150,15 +170,11 @@ public class EmailClient {
                     return;
                 }
 
-                switch (split[0]) {
-                    case ("Official"):
-                        saveOfficialRecipient(split1);
-                        break;
-                    case ("Office_friend"):
-                        saveOfficialFriendRecipient(split1);
-                        break;
-                    case ("Personal"):
-                        savePersonalRecipient(split1);
+                switch (type) {
+                    case "Official":
+                    case "Office_friend":
+                    case "Personal":
+                        saveRecipientByType(type, split1);
                         break;
                     default:
                         printInstructions("Please follow the given format for input!");

@@ -11,6 +11,12 @@ public class Official_Recipient extends Recipient {
     public Official_Recipient() {
     }
 
+    @EnsuresNonNull({ "this.name", "this.email", "this.designation" })
+    public void initialize(@NonNull String name, @NonNull String email, @NonNull String designation) {
+        super.initialize(name, email);
+        this.designation = designation;
+    }
+
     @EnsuresNonNull("this.designation")
     public void setDesignation(@NonNull String designation) {
         this.designation = designation;

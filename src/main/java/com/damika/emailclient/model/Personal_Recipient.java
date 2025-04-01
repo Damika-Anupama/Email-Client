@@ -9,6 +9,9 @@ public class Personal_Recipient extends Recipient {
     private @MonotonicNonNull String nickname;
     private @MonotonicNonNull String birthday;
 
+    public Personal_Recipient() {
+    }
+
     @EnsuresNonNull({ "this.name", "this.email", "this.nickname", "this.birthday" })
     public void initialize(@NonNull String name, @NonNull String email, @NonNull String nickname,
             @NonNull String birthday) {
