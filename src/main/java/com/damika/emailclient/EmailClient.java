@@ -314,12 +314,11 @@ public class EmailClient {
 
     private void shutdownSystem6() {
         System.out.println("System Shutdown!");
-        try {
-            reader.close();
+        try (BufferedReader readerToClose = reader) {
+            System.exit(0);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error occurred while closing resources: " + e.getMessage());
         }
-        System.exit(0);
     }
 
     private int giveUserSelectedOption(int defaultOption) {
