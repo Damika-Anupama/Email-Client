@@ -285,16 +285,15 @@ public class EmailClient {
 
         System.out.print("Please enter the date when the emails were sent: ");
         System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
-        ArrayList<Email> emails;
         try {
             @Nullable
             String input = reader.readLine();
             if (input == null) {
-                System.out.println("Invalid input");
-                return;
+            System.out.println("Invalid input");
+            return;
             }
-            emails = fileService.findMail(input);
-            emails.forEach(System.out::println);
+            ArrayList<Email> emails = fileService.findMail(input);
+            emails.stream().filter(Objects::nonNull).forEach(System.out::println);
         } catch (IOException e) {
             System.out.println("Error reading input or retrieving email list.");
             e.printStackTrace();
