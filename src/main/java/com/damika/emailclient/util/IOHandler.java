@@ -19,13 +19,13 @@ public class IOHandler {
 
     public int getUserSelectedOption() {
         while (true) {
-            System.out.println("Please enter your option in a valid range!");
+            printInstructions("Please enter your option in a valid range!");
             try {
                 @Nullable
                 String input = reader.readLine();
                 return Integer.parseInt(input.trim());
             } catch (IOException e) {
-                System.out.println("Error reading input. Please try again.");
+                printInstructions("Error reading input. Please try again.");
             }
         }
     }
@@ -37,11 +37,11 @@ public class IOHandler {
             if (InputValidator.isValidInput(input)) {
                 return input;
             } else {
-                System.out.println("Invalid input. Please try again.");
+                printInstructions("Invalid input. Please try again.");
                 return null;
             }
         } catch (IOException e) {
-            System.out.println("Your input operation failed or was interrupted!");
+            printInstructions("Your input operation failed or was interrupted!");
             return null;
         }
     }

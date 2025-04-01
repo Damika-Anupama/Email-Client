@@ -18,15 +18,15 @@ public class ShutdownSystemCommand implements Command {
 
     @Override
     public void execute() {
-        System.out.println("Are you sure you want to shut down the system? (yes/no)");
+        context.getIoHandler().printInstructions("Are you sure you want to shut down the system? (yes/no)");
         try {
             @Nullable
             String confirmation = context.getReader().readLine();
             if (InputValidator.isValidInput(confirmation) && confirmation.equalsIgnoreCase("yes")) {
-                System.out.println("System Shutdown!");
+                context.getIoHandler().printInstructions("System Shutdown!");
                 System.exit(0);
             } else {
-                System.out.println("Shutdown canceled.");
+                context.getIoHandler().printInstructions("Shutdown canceled.");
             }
         } catch (IOException e) {
             System.err.println("Error occurred while reading input: " + e.getMessage());

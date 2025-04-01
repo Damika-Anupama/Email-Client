@@ -15,9 +15,17 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import com.damika.emailclient.model.Email;
-
+import com.damika.emailclient.util.IOHandler;
 
 public class EmailSendingService implements Runnable {
+    private final @NonNull IOHandler ioHandler;
+    private final @NonNull FileService fileService;
+
+    public EmailSendingService(@NonNull IOHandler ioHandler, @NonNull FileService fileService) {
+        this.ioHandler = ioHandler;
+        this.fileService = fileService;
+    }
+
     @RequiresNonNull({ "#1.recipient", "#1.subject", "#1.content", "#1.sendingDate" })
     public boolean sendMail(@NonNull Email email) {
 
@@ -46,7 +54,7 @@ public class EmailSendingService implements Runnable {
             String content = email.getContent();
 
             if (recipient == null || subject == null || content == null) {
-                System.out.println("Error: recipient, subject, or content is null. Email not sent.");
+                ioHandler.printInstructions("Error: recipient, subject, or content is null. Email not sent.");
                 return false;
             }
 
@@ -75,12 +83,12 @@ public class EmailSendingService implements Runnable {
         String todayShort = shortFormat.format(now);
         String todayFull = fullFormat.format(now);
 
-        FileService file_service = new FileService();
+        FileService file_service = this.fileService;
         @Nullable
         String[] recipients = file_service.getAllRecipients();
 
         if (recipients == null) {
-            System.out.println("No recipients to process.");
+            ioHandler.printInstructions("No recipients to process.");
             return;
         }
 
@@ -120,17 +128,19 @@ public class EmailSendingService implements Runnable {
                     if (!alreadySent) {
                         Email email = new Email(recipientEmail, subject, content, todayFull);
                         if (sendMail(email)) {
-                            System.out.println("🎉 Today is " + split2[0] + "'s birthday! 🎂");
-                            System.out.println("Email sent to " + recipientEmail + ":\nSubject: " + subject
-                                    + "\nMessage: " + content + "\n");
+                            ioHandler.printInstructions(
+                                        "🎉 Today is " + split2[0] + "'s birthday! 🎂 \n" + 
+                                        "Email sent to " + recipientEmail + ":\nSubject: " + subject +
+                                        "\nMessage: " + content + "\n"
+                                    );
                             file_service.saveEmail(email); // Save after sending
                         }
                     } else {
-                        System.out.println("✅ Birthday email already sent to " + recipientEmail + " today.");
+                        ioHandler.printInstructions("✅ Birthday email already sent to " + recipientEmail + " today.");
                     }
                 }
             }
         }
-        System.out.println("✅ Birthday checking complete.");
+        ioHandler.printInstructions("✅ Birthday checking complete.");
     }
 }

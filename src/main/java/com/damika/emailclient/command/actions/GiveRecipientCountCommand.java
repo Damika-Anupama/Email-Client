@@ -22,9 +22,9 @@ public class GiveRecipientCountCommand implements Command {
         String[] recipients = context.getFileService().getAllRecipients();
 
         if (InputValidator.isNullOrEmpty(recipients)) {
-            System.out.println("No recipients found.");
+            context.getIoHandler().printInstructions("No recipients found.");
             return;
         }
-        System.out.println("Number of recipients: " + recipients.length);
+        context.getIoHandler().printInstructions("Number of recipients: " + recipients.length);
     }
 }

@@ -30,10 +30,10 @@ public class EmailClient {
     private final CommandContext commandContext;
 
     public EmailClient() {
+        this.ioHandler = Objects.requireNonNull(getIOHandlerProvider(), "IOHandler must not be null");
         this.fileService = Objects.requireNonNull(getFileServiceProvider(), "FileService must not be null");
         this.emailService = Objects.requireNonNull(getEmailServiceProvider(), "EmailSendingService must not be null");
         this.reader = Objects.requireNonNull(getBufferedReaderProvider(), "BufferedReader must not be null");
-        this.ioHandler = Objects.requireNonNull(getIOHandlerProvider(), "IOHandler must not be null");
         this.commandContext = new CommandContext(fileService, emailService, reader, ioHandler);
         initializeCommands();
     }
@@ -43,11 +43,11 @@ public class EmailClient {
     }
 
     private static @NonNull EmailSendingService getEmailServiceProvider() {
-        return new EmailSendingService();
+        return new EmailSendingService(getIOHandlerProvider(), getFileServiceProvider());
     }
 
     private static @NonNull FileService getFileServiceProvider() {
-        return new FileService();
+        return new FileService(getIOHandlerProvider());
     }
 
     private static @NonNull IOHandler getIOHandlerProvider() {
@@ -83,7 +83,7 @@ public class EmailClient {
             Command command = commandMap.get(option);
 
             if (!InputValidator.isValidOption(String.valueOf(option), 1, 6)) {
-                System.out.println("Invalid option. Please enter a number between 1 and 6.");
+                commandContext.getIoHandler().printInstructions("Invalid option. Please enter a number between 1 and 6.");
                 continue;
             }else {
                 command.execute();
@@ -97,7 +97,7 @@ public class EmailClient {
     }
 
     private void greetRecipients() {
-        new Thread(new EmailSendingService(), "birthdayWisher").start();
+        new Thread(getEmailServiceProvider(), "birthdayWisher").start();
     }
 
     public static void main(@NonNull String[] args) {

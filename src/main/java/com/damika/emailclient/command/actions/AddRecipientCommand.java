@@ -16,7 +16,7 @@ public class AddRecipientCommand implements Command {
     @EnsuresNonNull({ "this.context", "this.recipientManager" })
     public AddRecipientCommand(@NonNull CommandContext context) {
         this.context = context;
-        this.recipientManager = new RecipientManager(context.getFileService());
+        this.recipientManager = new RecipientManager(context.getFileService(), context.getIoHandler());
     }
 
     @Override
@@ -29,7 +29,7 @@ public class AddRecipientCommand implements Command {
         int input = context.getIoHandler().getUserSelectedOption();
 
         if (!InputValidator.isValidOption(String.valueOf(input), 1, 3)) {
-            System.out.println("Invalid option. Please enter a number between 1 and 3.");
+            context.getIoHandler().printInstructions("Invalid option. Please enter a number between 1 and 3.");
             return;
         }
 
@@ -45,7 +45,7 @@ public class AddRecipientCommand implements Command {
                 String recipientDetails = context.getIoHandler().getUserInsertedDetails();
 
                 if (!InputValidator.isValidRecipientInput(recipientDetails)) {
-                    System.out.println("Invalid input format. Please follow the correct format.");
+                    context.getIoHandler().printInstructions("Invalid input format. Please follow the correct format.");
                     return;
                 }
 
@@ -54,7 +54,7 @@ public class AddRecipientCommand implements Command {
                 String[] details = split[1].split(",");
 
                 if (!InputValidator.isValidRecipientTypeAndDetails(type, details)) {
-                    System.out.println("Invalid recipient type or details. Please try again.");
+                    context.getIoHandler().printInstructions("Invalid recipient type or details. Please try again.");
                     return;
                 }
 
@@ -62,21 +62,21 @@ public class AddRecipientCommand implements Command {
                 break;
 
             case 2:
-                System.out.print("Please enter the email of the recipient: ");
+                context.getIoHandler().printInstructions("Please enter the email of the recipient: ");
                 try {
                     @Nullable
                     String email = context.getReader().readLine();
                     if (InputValidator.isNullOrEmpty(email)) {
-                        System.out.println("Input was null or empty.");
+                        context.getIoHandler().printInstructions("Input was null or empty.");
                         return;
                     }
 
                     @Nullable
                     String recipient = context.getFileService().findRecipientByEmailAddress(email);
                     if (recipient != null) {
-                        System.out.println(recipient);
+                        context.getIoHandler().printInstructions(recipient);
                     } else {
-                        System.out.println("Recipient not found.");
+                        context.getIoHandler().printInstructions("Recipient not found.");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -87,19 +87,19 @@ public class AddRecipientCommand implements Command {
                 @Nullable
                 String[] recipients = context.getFileService().getAllRecipients();
                 if (recipients == null || recipients.length == 0) {
-                    System.out.println("No recipients found!");
+                    context.getIoHandler().printInstructions("No recipients found!");
                     return;
                 }
                 for (String recipient : recipients) {
                     if (recipient != null) {
-                        System.out.println(recipient);
+                        context.getIoHandler().printInstructions(recipient);
                     }
                 }
-                System.out.println();
+                context.getIoHandler().printInstructions("All recipients have been printed!");
                 break;
 
             default:
-                System.out.println("Please enter a given value!");
+                context.getIoHandler().printInstructions("Please enter a given value!");
                 break;
         }
     }

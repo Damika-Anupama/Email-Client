@@ -13,7 +13,7 @@ import com.damika.emailclient.factory.implementations.BasicEmailController;
 import com.damika.emailclient.model.Email;
 import com.damika.emailclient.util.InputValidator;
 
-public class SendEmailCommand implements Command{
+public class SendEmailCommand implements Command {
     private final @NonNull CommandContext context;
 
     @EnsuresNonNull({ "this.context" })
@@ -32,7 +32,7 @@ public class SendEmailCommand implements Command{
         @Nullable
         String userInput = context.getIoHandler().getUserInsertedDetails();
         if (!InputValidator.isValidEmailInput(userInput)) {
-            System.out.println("Invalid input format. Please follow the correct format.");
+            context.getIoHandler().printInstructions("Invalid input format. Please follow the correct format.");
             return;
         }
 
@@ -45,9 +45,10 @@ public class SendEmailCommand implements Command{
         email.setSendingDate(dtf.format(now));
 
         if (context.getEmailService().sendMail(email)) {
-            System.out.println("Your email was sent successfully!");
+            context.getIoHandler().printInstructions("Your email was sent successfully!");
             boolean saved = context.getFileService().saveEmail(email);
-            System.out.println(saved ? "Mail saved in the server." : "Error occurred saving the mail.");
+            context.getIoHandler()
+                    .printInstructions(saved ? "Mail saved in the server." : "Error occurred saving the mail.");
         }
     }
 }

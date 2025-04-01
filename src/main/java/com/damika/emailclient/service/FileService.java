@@ -20,10 +20,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import com.damika.emailclient.model.Email;
 import com.damika.emailclient.util.AppendableObjectOutputStream;
+import com.damika.emailclient.util.IOHandler;
 
 public class FileService {
-    final static @NonNull Path clientList = Paths.get("data/ClientList.txt");
-    final static @NonNull Path emailList = Paths.get("data/EmailList.txt");
+    private final static @NonNull Path clientList = Paths.get("data/ClientList.txt");
+    private final static @NonNull Path emailList = Paths.get("data/EmailList.txt");
+    private final @NonNull IOHandler ioHandler;
 
     static {
         try {
@@ -48,18 +50,21 @@ public class FileService {
         }
     }
 
+    public FileService(@NonNull IOHandler ioHandler) {
+        this.ioHandler = ioHandler;
+    }
     /* Recipient Service */
     public boolean saveRecipient(@NonNull String recipient) {
         // Validate basic format
         String[] parts = recipient.split(": ");
         if (parts.length != 2) {
-            System.out.println("Invalid format. Must contain a single ': ' to separate type and details.");
+            ioHandler.printInstructions("Invalid format. Must contain a single ': ' to separate type and details.");
             return false;
         }
 
         String[] fields = parts[1].split(",");
         if (fields.length < 2) {
-            System.out.println("Invalid format. Not enough fields after ': '.");
+            ioHandler.printInstructions("Invalid format. Not enough fields after ': '.");
             return false;
         }
 
@@ -70,7 +75,7 @@ public class FileService {
         @Nullable
         String existing = findRecipientByEmailAddress(email);
         if (Files.exists(clientList) && existing != null) {
-            System.out.println("This user already exists!");
+            ioHandler.printInstructions("This user already exists!");
             return false;
         }
 
@@ -85,17 +90,17 @@ public class FileService {
                 writer.write("\n");
             }
             writer.write(recipient);
-            System.out.println("Successfully inserted the recipient!");
+            ioHandler.printInstructions("Successfully inserted the recipient!");
             return true;
         } catch (IOException e) {
-            System.out.println("File I/O error: " + e.getMessage());
+            ioHandler.printInstructions("File I/O error: " + e.getMessage());
             return false;
         }
     }
 
     public @Nullable String @Nullable [] getAllRecipients() {
         if (!Files.exists(clientList)) {
-            System.out.println("No Recipient exists!");
+            ioHandler.printInstructions("No Recipient exists!");
             return null;
         }
         try {
@@ -103,7 +108,7 @@ public class FileService {
             String recipientFileData = new String(bytes);
             return recipientFileData.split("\\R");
         } catch (IOException e) {
-            System.out.println("There is a failure during reading the recipients, Please contact the developer!");
+            ioHandler.printInstructions("There is a failure during reading the recipients, Please contact the developer!");
             return null;
         }
     }
@@ -208,8 +213,10 @@ public class FileService {
 
             }
         } catch (StreamCorruptedException sce) {
-            System.out.println(sce);
-            System.err.println("⚠️ EmailList.txt is corrupted or not in valid serialized format.");
+            ioHandler.printInstructions(
+                    sce.getMessage() + 
+                    "\n ⚠️ EmailList.txt is corrupted or not in valid serialized format."
+                );
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }

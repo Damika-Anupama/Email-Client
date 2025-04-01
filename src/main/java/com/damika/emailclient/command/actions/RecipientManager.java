@@ -7,19 +7,22 @@ import com.damika.emailclient.model.Official_Recipient;
 import com.damika.emailclient.model.Official_Recipient_Friend;
 import com.damika.emailclient.model.Personal_Recipient;
 import com.damika.emailclient.service.FileService;
+import com.damika.emailclient.util.IOHandler;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 
 public class RecipientManager {
-    private final FileService fileService;
+    private final @NonNull FileService fileService;
+    private final @NonNull IOHandler ioHandler;
 
-    public RecipientManager(FileService fileService) {
+    public RecipientManager(@NonNull FileService fileService, @NonNull IOHandler ioHandler) {
         this.fileService = fileService;
+        this.ioHandler = ioHandler;
     }
 
     public void saveRecipient(@NonNull String data) {
-        System.out.println(
+        ioHandler.printInstructions(
                 fileService.saveRecipient(data) ? "Client saved successfully!" : "Try again!");
     }
 
@@ -34,12 +37,12 @@ public class RecipientManager {
                 expectedLength = 4;
                 break;
             default:
-                System.out.println("Unknown recipient type. Use 'Official', 'Office_friend', or 'Personal'.");
+                ioHandler.printInstructions("Unknown recipient type. Use 'Official', 'Office_friend', or 'Personal'.");
                 return;
         }
 
         if (details.length != expectedLength) {
-            System.out.println(
+            ioHandler.printInstructions(
                     "Invalid number of details for type '" + type + "'. Expected " + expectedLength + " fields.");
             return;
         }
@@ -71,7 +74,7 @@ public class RecipientManager {
                 return pr;
 
             default:
-                System.out.println("Unknown recipient type. Cannot create recipient.");
+                ioHandler.printInstructions("Unknown recipient type. Cannot create recipient.");
                 return null;
         }
     }

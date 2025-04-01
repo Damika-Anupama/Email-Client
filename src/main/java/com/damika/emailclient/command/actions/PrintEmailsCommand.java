@@ -23,19 +23,21 @@ public class PrintEmailsCommand implements Command {
 
     @Override
     public void execute() {
-        System.out.print("Please enter the date when the emails were sent: ");
-        System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
+        context.getIoHandler().printInstructions("Please enter the date when the emails were sent: " +
+                "\ninput format - yyyy/MM/dd (ex: 2018/09/17)");
+
         try {
             @Nullable
             String input = context.getReader().readLine();
             if (!InputValidator.isValidDate(input, "yyyy/MM/dd")) {
-                System.out.println("Invalid input or date format. Please follow the correct format.");
+                context.getIoHandler()
+                        .printInstructions("Invalid input or date format. Please follow the correct format.");
                 return;
             }
             ArrayList<Email> emails = context.getFileService().findMail(input);
             emails.stream().filter(Objects::nonNull).forEach(System.out::println);
         } catch (IOException e) {
-            System.out.println("Error reading input or retrieving email list.");
+            context.getIoHandler().printInstructions("Error reading input or retrieving email list.");
             e.printStackTrace();
         }
     }

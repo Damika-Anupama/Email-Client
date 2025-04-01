@@ -22,8 +22,11 @@ public class PrintRecipientsDueToBirthdayCommand implements Command {
 
     @Override
     public void execute() {
-        System.out.println("Please enter the birthday of the recipients: ");
-        System.out.println("input format - yyyy/MM/dd (ex: 2018/09/17)");
+        context.getIoHandler().printInstructions(
+                    "Please enter the birthday of the recipients: \n" +
+                    "input format - yyyy/MM/dd (ex: 2018/09/17)"
+                );
+
         @MonotonicNonNull
         ArrayList<String> recipients = new ArrayList<>();
         try {
@@ -32,7 +35,7 @@ public class PrintRecipientsDueToBirthdayCommand implements Command {
             if (InputValidator.isValidDate(bodInput, "yyyy/MM/dd")) {
                 recipients = context.getFileService().findRecipientsByBOD(bodInput);
             } else {
-                System.out.println("Invalid or null input. Cannot search for recipients.");
+                context.getIoHandler().printInstructions("Invalid or null input. Cannot search for recipients.");
                 return;
             }
         } catch (IOException e) {
@@ -41,7 +44,7 @@ public class PrintRecipientsDueToBirthdayCommand implements Command {
         }
 
         if (recipients.size() == 0) {
-            System.out.println("No recipient was found, according to the given birthday!");
+            context.getIoHandler().printInstructions("No recipient was found, according to the given birthday!");
         } else {
             recipients.forEach(System.out::println);
         }
