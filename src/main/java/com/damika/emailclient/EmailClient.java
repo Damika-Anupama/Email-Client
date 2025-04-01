@@ -22,6 +22,7 @@ import com.damika.emailclient.model.Official_Recipient_Friend;
 import com.damika.emailclient.model.Personal_Recipient;
 import com.damika.emailclient.factory.implementations.BasicEmailController;
 import com.damika.emailclient.handler.GlobalExceptionHandler;
+import com.damika.emailclient.util.InputValidator;
 
 public class EmailClient {
     private final @NonNull FileService fileService;
@@ -116,12 +117,14 @@ public class EmailClient {
         printInstructions("Enter 1: if you want to add a new recipient\n" +
                 "Enter 2: If you want to get a specified recipient by email\n" +
                 "Enter 3: If you want to get all the recipients\n");
-        int input = giveUserSelectedOption(0);
+        int input = giveUserSelectedOption();
+        if (!InputValidator.isValidOption(String.valueOf(input), 1, 3)) {
+            System.out.println("Invalid option. Please enter a number between 1 and 3.");
+            return;
+        }
 
         switch (input) {
             case 1:
-                String[] split = new String[0];
-                String[] split1 = new String[0];
                 printInstructions("\n" +
                         "input format - \n" +
                         "Official: Nimal,nimal@gmail.com,ceo\n" +
@@ -131,77 +134,45 @@ public class EmailClient {
                 @Nullable
                 String recipientDetails = giveUserInsertedDetails();
 
-                if (recipientDetails == null) {
-                    System.out.println("Input was null. Please try again!");
+                if (!InputValidator.isValidRecipientInput(recipientDetails)) {
+                    System.out.println("Invalid input format. Please follow the correct format.");
                     return;
                 }
 
-                if (!recipientDetails.contains(": ")) {
-                    System.out.println("Invalid format. Missing ': ' separator. Please follow the correct format.");
-                    return;
-                }
-
-                split = recipientDetails.split(": ");
-                if (split.length != 2) {
-                    System.out.println("Invalid format. Expected one ':' to separate type and details.");
-                    return;
-                }
-
-                split1 = split[1].split(",");
-
+                String[] split = recipientDetails.split(": ");
                 String type = split[0];
-                int expectedLength;
-                switch (type) {
-                    case "Official":
-                        expectedLength = 3;
-                        break;
-                    case "Office_friend":
-                    case "Personal":
-                        expectedLength = 4;
-                        break;
-                    default:
-                        System.out.println("Unknown recipient type. Use 'Official', 'Office_friend', or 'Personal'.");
-                        return;
-                }
+                String[] details = split[1].split(",");
 
-                if (split1.length != expectedLength) {
-                    System.out.println("Invalid number of details for type '" + type + "'. Expected " + expectedLength
-                            + " fields.");
+                if (!InputValidator.isValidRecipientTypeAndDetails(type, details)) {
+                    System.out.println("Invalid recipient type or details. Please try again.");
                     return;
                 }
 
-                switch (type) {
-                    case "Official":
-                    case "Office_friend":
-                    case "Personal":
-                        saveRecipientByType(type, split1);
-                        break;
-                    default:
-                        printInstructions("Please follow the given format for input!");
-                        break;
-                }
-
+                saveRecipientByType(type, details);
                 break;
+
             case 2:
                 System.out.print("Please enter the email of the recipient: ");
                 try {
                     @Nullable
                     String email = reader.readLine();
-                    if (email != null) {
-                        @Nullable
-                        String recipient = fileService.findRecipientByEmailAddress(email);
-                        if (recipient != null) {
-                            System.out.println(recipient);
-                        } else {
-                            System.out.println("Recipient not found.");
-                        }
+                    if (InputValidator.isNullOrEmpty(email)) {
+                        System.out.println("Input was null or empty.");
+                        return;
+                    }
+
+                    @Nullable
+                    String recipient = fileService.findRecipientByEmailAddress(email);
+                    if (recipient != null) {
+                        System.out.println(recipient);
                     } else {
-                        System.out.println("Input was null.");
+                        System.out.println("Recipient not found.");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
+
             case 3:
                 @Nullable
                 String[] recipients = fileService.getAllRecipients();
@@ -210,12 +181,13 @@ public class EmailClient {
                     return;
                 }
                 for (String recipient : recipients) {
-                    if (recipient == null)
-                        continue;
-                    System.out.println(recipient);
+                    if (recipient != null) {
+                        System.out.println(recipient);
+                    }
                 }
                 System.out.println();
                 break;
+
             default:
                 System.out.println("Please enter a given value!");
                 break;
@@ -225,33 +197,29 @@ public class EmailClient {
     private void sendEmail2() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         LocalDateTime now = LocalDateTime.now();
-        String[] emailDetails;
+
         printInstructions("Please input your sending email details!\n" +
                 "Input format: recipient's email, subject, content");
 
         @Nullable
         String userInput = giveUserInsertedDetails();
-        if (userInput == null) {
-            System.out.println("Input is null. Aborting.");
+        if (!InputValidator.isValidEmailInput(userInput)) {
+            System.out.println("Invalid input format. Please follow the correct format.");
             return;
         }
 
-        emailDetails = userInput.split(", ");
-        if (emailDetails.length < 3) {
-            System.out.println("Invalid input. Aborting.");
-            return;
-        }
-
+        String[] emailDetails = userInput.split(", ");
         BasicEmailController bec = new BasicEmailController();
         Email email = bec.create();
         email.setRecipient(emailDetails[0]);
         email.setSubject(emailDetails[1]);
         email.setContent(emailDetails[2]);
         email.setSendingDate(dtf.format(now));
+
         if (emailService.sendMail(email)) {
             System.out.println("Your email was sent successfully!");
-            boolean b = fileService.saveEmail(email);
-            System.out.println(b ? "Mail saved in the server." : "Error occurred saving the mail.");
+            boolean saved = fileService.saveEmail(email);
+            System.out.println(saved ? "Mail saved in the server." : "Error occurred saving the mail.");
         }
     }
 
@@ -263,10 +231,10 @@ public class EmailClient {
         try {
             @Nullable
             String bodInput = reader.readLine();
-            if (bodInput != null) {
+            if (InputValidator.isValidDate(bodInput, "yyyy/MM/dd")) {
                 recipients = fileService.findRecipientsByBOD(bodInput);
             } else {
-                System.out.println("Input was null. Cannot search for recipients.");
+                System.out.println("Invalid or null input. Cannot search for recipients.");
                 return;
             }
         } catch (IOException e) {
@@ -288,9 +256,9 @@ public class EmailClient {
         try {
             @Nullable
             String input = reader.readLine();
-            if (input == null) {
-            System.out.println("Invalid input");
-            return;
+            if (!InputValidator.isValidDate(input, "yyyy/MM/dd")) {
+                System.out.println("Invalid input or date format. Please follow the correct format.");
+                return;
             }
             ArrayList<Email> emails = fileService.findMail(input);
             emails.stream().filter(Objects::nonNull).forEach(System.out::println);
@@ -304,7 +272,7 @@ public class EmailClient {
         @Nullable
         String[] recipients = fileService.getAllRecipients();
 
-        if (recipients == null) {
+        if (InputValidator.isNullOrEmpty(recipients)) {
             System.out.println("No recipients found.");
             return;
         }
@@ -312,49 +280,51 @@ public class EmailClient {
     }
 
     private void shutdownSystem6() {
-        System.out.println("System Shutdown!");
-        try (BufferedReader readerToClose = reader) {
-            System.exit(0);
+        System.out.println("Are you sure you want to shut down the system? (yes/no)");
+        try {
+            @Nullable
+            String confirmation = reader.readLine();
+            if (InputValidator.isValidInput(confirmation) && confirmation.equalsIgnoreCase("yes")) {
+                System.out.println("System Shutdown!");
+                System.exit(0);
+            } else {
+                System.out.println("Shutdown canceled.");
+            }
         } catch (IOException e) {
-            System.err.println("Error occurred while closing resources: " + e.getMessage());
+            System.err.println("Error occurred while reading input: " + e.getMessage());
         }
     }
 
-    private int giveUserSelectedOption(int defaultOption) {
+    private int giveUserSelectedOption() {
         while (true) {
-            System.out.println("Please enter your option in valid range!");
+            System.out.println("Please enter your option in a valid range!");
             try {
                 @Nullable
                 String input = reader.readLine();
-                if (input == null || input.trim().isEmpty()) {
-                    System.out.println("Input was empty. Try again.");
-                    continue;
-                }
-
-                int option = Integer.parseInt(input.trim());
-                if (option >= 1 && option <= 6) {
-                    return option;
-                } else {
-                    System.out.println("Please enter a number between 1 and 6.");
-                }
-
-            } catch (IOException | NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a valid integer.");
+                return Integer.parseInt(input.trim());
+            } catch (IOException e) {
+                System.out.println("Error reading input. Please try again.");
             }
         }
     }
 
     private @Nullable String giveUserInsertedDetails() {
         try {
-            return reader.readLine();
+            @Nullable
+            String input = reader.readLine();
+            if (InputValidator.isValidInput(input)) {
+                return input;
+            } else {
+                System.out.println("Invalid input. Please try again.");
+                return null;
+            }
         } catch (IOException e) {
-            System.out.println("Your input operation is failed or interrupted!");
+            System.out.println("Your input operation failed or was interrupted!");
             return null;
         }
     }
 
-    private void selectOptions(int option) {
-
+    private void selectOptions(int option) {   
         switch (option) {
             case 1:
                 addNewCustomer1();
@@ -382,7 +352,6 @@ public class EmailClient {
 
     @SuppressWarnings("InfiniteLoopStatement")
     private void actionController() {
-
         while (true) {
             printInstructions("\n Enter option type: \n"
                     + "1 - Adding a new recipient\n"
@@ -391,7 +360,13 @@ public class EmailClient {
                     + "4 - Printing out details of all the emails sent\n"
                     + "5 - Printing out the number of recipients in this application\n"
                     + "6 - exit\n");
-            selectOptions(giveUserSelectedOption(6));
+    
+            int option = giveUserSelectedOption();
+            if (!InputValidator.isValidOption(String.valueOf(option), 1, 6)) {
+                System.out.println("Invalid option. Please enter a number between 1 and 6.");
+                continue;
+            }
+            selectOptions(option);
         }
     }
 
