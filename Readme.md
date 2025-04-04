@@ -25,10 +25,11 @@ This is a **Java-based command-line email client** designed to manage recipients
 
 - 🧱 **Design Patterns & Structure**  
   Uses **Factory Method Pattern** for object creation (Recipient and Email).  
+  Implements the **Command Design Pattern** to encapsulate requests as objects, enabling features like undoable operations, parameterization of requests, and flexible command execution.  
   Code is modular and adheres to object-oriented best practices.
 
 - 🦺 **Null Safety**  
-  Leverages the [**Checker Framework**](https://checkerframework.org/manual) with ``, `@Nullable`, etc., for safer code via nullness annotations.
+  Leverages the [**Checker Framework**](https://checkerframework.org/manual) with `MonotonicNonNull`, `@Nullable`, etc., for safer code via nullness annotations.
 
 - 🛡️ **Error Handling**  
   Handles file I/O errors, malformed inputs, email configuration issues, etc.
@@ -83,48 +84,60 @@ mvn exec:java -Dexec.mainClass="com.damika.emailclient.EmailClient"
 ├── LICENSE
 ├── pom.xml
 ├── Readme.md
-└── src
-    ├── main
-    │   ├── java
-    │   │   └── com
-    │   │       └── damika
-    │   │           └── emailclient
-    │   │               ├── EmailClient.java
-    │   │               ├── factory
-    │   │               │   ├── EmailController.java
-    │   │               │   ├── implementations
-    │   │               │   │   ├── BasicEmailController.java
-    │   │               │   │   ├── EmailCreator.java
-    │   │               │   │   ├── OfficialRecipientController.java
-    │   │               │   │   ├── OfficialRecipientCreator.java
-    │   │               │   │   ├── OfficialRecipientFriendController.java
-    │   │               │   │   ├── OfficialRecipientFriendCreator.java
-    │   │               │   │   ├── PersonalRecipientController.java
-    │   │               │   │   └── PersonalRecipientCreator.java
-    │   │               │   ├── NewEmailCreator.java
-    │   │               │   ├── NewRecipientCreator.java
-    │   │               │   └── RecipientController.java
-    │   │               ├── handler
-    │   │               │   └── GlobalExceptionHandler.java
-    │   │               ├── model
-    │   │               │   ├── Email.java
-    │   │               │   ├── Official_Recipient_Friend.java
-    │   │               │   ├── Official_Recipient.java
-    │   │               │   ├── Personal_Recipient.java
-    │   │               │   └── Recipient.java
-    │   │               ├── service
-    │   │               │   ├── EmailSendingService.java
-    │   │               │   └── FileService.java
-    │   │               └── util
-    │   │                   └── AppendableObjectOutputStream.java
-    │   └── resources
-    │       └── application.properties
-    └── test
-        └── java
-            └── com
-                └── damika
-                    └── emailclient
-                        └── AppTest.java
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── com
+│   │   │       └── damika
+│   │   │           └── emailclient
+│   │   │               ├── command
+│   │   │               │   ├── actions
+│   │   │               │   │   ├── ActionController.java
+│   │   │               │   │   ├── AddRecipientCommand.java
+│   │   │               │   │   ├── GiveRecipientCountCommand.java
+│   │   │               │   │   ├── PrintEmailsCommand.java
+│   │   │               │   │   ├── PrintRecipientsDueToBirthdayCommand.java
+│   │   │               │   │   ├── RecipientManager.java
+│   │   │               │   │   ├── SendEmailCommand.java
+│   │   │               │   │   └── ShutdownSystemCommand.java
+│   │   │               │   ├── CommandContext.java
+│   │   │               │   ├── CommandInitializer.java
+│   │   │               │   └── Command.java
+│   │   │               ├── EmailClient.java
+│   │   │               ├── factory
+│   │   │               │   ├── EmailController.java
+│   │   │               │   ├── implementations
+│   │   │               │   │   ├── BasicEmailController.java
+│   │   │               │   │   ├── EmailCreator.java
+│   │   │               │   │   ├── OfficialRecipientController.java
+│   │   │               │   │   ├── OfficialRecipientCreator.java
+│   │   │               │   │   ├── OfficialRecipientFriendController.java
+│   │   │               │   │   ├── OfficialRecipientFriendCreator.java
+│   │   │               │   │   ├── PersonalRecipientController.java
+│   │   │               │   │   └── PersonalRecipientCreator.java
+│   │   │               │   ├── NewEmailCreator.java
+│   │   │               │   ├── NewRecipientCreator.java
+│   │   │               │   └── RecipientController.java
+│   │   │               ├── handler
+│   │   │               │   └── GlobalExceptionHandler.java
+│   │   │               ├── model
+│   │   │               │   ├── Email.java
+│   │   │               │   ├── Official_Recipient_Friend.java
+│   │   │               │   ├── Official_Recipient.java
+│   │   │               │   ├── Personal_Recipient.java
+│   │   │               │   └── Recipient.java
+│   │   │               ├── service
+│   │   │               │   ├── BirthdayGreetingService.java
+│   │   │               │   ├── EmailSendingService.java
+│   │   │               │   └── FileService.java
+│   │   │               └── util
+│   │   │                   ├── AppendableObjectOutputStream.java
+│   │   │                   ├── ExceptionHandlerUtil.java
+│   │   │                   ├── InputValidator.java
+│   │   │                   └── IOHandler.java
+│   │   └── resources
+│   │       └── application.properties
+
 ```
 
 
