@@ -4,8 +4,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import com.damika.emailclient.service.EmailSendingService;
 import com.damika.emailclient.service.FileService;
 import com.damika.emailclient.service.BirthdayGreetingService;
@@ -17,12 +15,12 @@ import com.damika.emailclient.util.ExceptionHandlerUtil;
 import com.damika.emailclient.util.IOHandler;
 
 public class EmailClient {
-    private final @NonNull IOHandler ioHandler;
-    private final @NonNull BufferedReader reader;
-    private final @NonNull FileService fileService;
-    private final @NonNull EmailSendingService emailService;
-    private final @NonNull CommandContext commandContext;
-    private final @NonNull Map<Integer, Command> commandMap;
+    private final IOHandler ioHandler;
+    private final BufferedReader reader;
+    private final FileService fileService;
+    private final EmailSendingService emailService;
+    private final CommandContext commandContext;
+    private final Map<Integer, Command> commandMap;
 
     public EmailClient() {
         this.ioHandler = new IOHandler();
@@ -35,7 +33,7 @@ public class EmailClient {
         this.commandMap = CommandInitializer.initializeCommands(commandContext);
     }
 
-    public static void main(@NonNull String[] args) {
+    public static void main(String[] args) {
         new EmailClient().start();
     }
 

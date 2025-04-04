@@ -8,25 +8,24 @@ import com.damika.emailclient.model.Official_Recipient_Friend;
 import com.damika.emailclient.model.Personal_Recipient;
 import com.damika.emailclient.service.FileService;
 import com.damika.emailclient.util.IOHandler;
-import org.checkerframework.checker.nullness.qual.NonNull;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-
 public class RecipientManager {
-    private final @NonNull FileService fileService;
-    private final @NonNull IOHandler ioHandler;
+    private final FileService fileService;
+    private final IOHandler ioHandler;
 
-    public RecipientManager(@NonNull FileService fileService, @NonNull IOHandler ioHandler) {
+    public RecipientManager(FileService fileService, IOHandler ioHandler) {
         this.fileService = fileService;
         this.ioHandler = ioHandler;
     }
 
-    public void saveRecipient(@NonNull String data) {
+    public void saveRecipient(String data) {
         ioHandler.printInstructions(
                 fileService.saveRecipient(data) ? "Client saved successfully!" : "Try again!");
     }
 
-    public void saveRecipientByType(@NonNull String type, @NonNull String[] details) {
+    public void saveRecipientByType(String type, String[] details) {
         int expectedLength;
         switch (type) {
             case "Official":
@@ -53,7 +52,7 @@ public class RecipientManager {
         }
     }
 
-    private @Nullable Object createRecipient(@NonNull String type, @NonNull String[] details) {
+    private @Nullable Object createRecipient(String type, String[] details) {
         switch (type) {
             case "Official":
                 OfficialRecipientController orc = new OfficialRecipientController();

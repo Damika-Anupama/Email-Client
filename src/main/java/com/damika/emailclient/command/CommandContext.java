@@ -7,18 +7,17 @@ import com.damika.emailclient.util.IOHandler;
 import java.io.BufferedReader;
 
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
 public class CommandContext {
-    private final @NonNull FileService fileService;
-    private final @NonNull EmailSendingService emailService;
-    private final @NonNull BufferedReader reader;
-    private final @NonNull IOHandler ioHandler;
+    private final FileService fileService;
+    private final EmailSendingService emailService;
+    private final BufferedReader reader;
+    private final IOHandler ioHandler;
 
-    @EnsuresNonNull({"this.fileService", "this.emailService", "this.reader", "this.ioHandler" })
-    public CommandContext(@NonNull FileService fileService, @NonNull EmailSendingService emailService,
-                          @NonNull BufferedReader reader, @NonNull IOHandler ioHandler) {
+    @EnsuresNonNull({ "this.fileService", "this.emailService", "this.reader", "this.ioHandler" })
+    public CommandContext(FileService fileService, EmailSendingService emailService,
+            BufferedReader reader, IOHandler ioHandler) {
         this.fileService = fileService;
         this.emailService = emailService;
         this.reader = reader;
@@ -26,22 +25,22 @@ public class CommandContext {
     }
 
     @RequiresNonNull("this.fileService")
-    public @NonNull FileService getFileService() {
+    public FileService getFileService() {
         return fileService;
     }
 
     @RequiresNonNull("this.emailService")
-    public @NonNull EmailSendingService getEmailService() {
+    public EmailSendingService getEmailService() {
         return emailService;
     }
 
     @RequiresNonNull("this.reader")
-    public @NonNull BufferedReader getReader() {
+    public BufferedReader getReader() {
         return reader;
     }
 
     @RequiresNonNull("this.ioHandler")
-    public @NonNull IOHandler getIoHandler() {
+    public IOHandler getIoHandler() {
         return ioHandler;
     }
 }

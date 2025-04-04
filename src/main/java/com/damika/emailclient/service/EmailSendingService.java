@@ -11,23 +11,22 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import com.damika.emailclient.model.Email;
 import com.damika.emailclient.util.IOHandler;
 
 public class EmailSendingService implements Runnable {
-    private final @NonNull IOHandler ioHandler;
-    private final @NonNull FileService fileService;
+    private final IOHandler ioHandler;
+    private final FileService fileService;
 
-    public EmailSendingService(@NonNull IOHandler ioHandler, @NonNull FileService fileService) {
+    public EmailSendingService(IOHandler ioHandler, FileService fileService) {
         this.ioHandler = ioHandler;
         this.fileService = fileService;
     }
 
     @RequiresNonNull({ "#1.recipient", "#1.subject", "#1.content", "#1.sendingDate" })
-    public boolean sendMail(@NonNull Email email) {
+    public boolean sendMail(Email email) {
 
         String sender = "palindrome.penguin.unity.clan@gmail.com";
         String password = "hlfmabeyiopoxzov";
@@ -93,7 +92,7 @@ public class EmailSendingService implements Runnable {
         }
 
         // Load all previously sent emails
-        ArrayList<@NonNull Email> previouslySent = file_service.findMail(todayFull);
+        ArrayList<Email> previouslySent = file_service.findMail(todayFull);
 
         for (@Nullable
         String s : recipients) {
@@ -129,10 +128,9 @@ public class EmailSendingService implements Runnable {
                         Email email = new Email(recipientEmail, subject, content, todayFull);
                         if (sendMail(email)) {
                             ioHandler.printInstructions(
-                                        "🎉 Today is " + split2[0] + "'s birthday! 🎂 \n" + 
-                                        "Email sent to " + recipientEmail + ":\nSubject: " + subject +
-                                        "\nMessage: " + content + "\n"
-                                    );
+                                    "🎉 Today is " + split2[0] + "'s birthday! 🎂 \n" +
+                                            "Email sent to " + recipientEmail + ":\nSubject: " + subject +
+                                            "\nMessage: " + content + "\n");
                             file_service.saveEmail(email); // Save after sending
                         }
                     } else {

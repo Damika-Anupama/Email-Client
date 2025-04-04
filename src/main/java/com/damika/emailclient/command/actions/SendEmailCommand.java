@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import com.damika.emailclient.command.Command;
@@ -14,24 +14,26 @@ import com.damika.emailclient.model.Email;
 import com.damika.emailclient.util.InputValidator;
 
 public class SendEmailCommand implements Command {
-    private final @NonNull CommandContext context;
+    private final @Nullable CommandContext context;
 
-    @EnsuresNonNull({ "this.context" })
-    public SendEmailCommand(@NonNull CommandContext context) {
+    public SendEmailCommand(CommandContext context) {
         this.context = context;
     }
 
     @Override
     public void execute() {
+        if (context == null) {
+            throw new IllegalStateException("CommandContext cannot be null");
+        }
+        
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         LocalDateTime now = LocalDateTime.now();
 
         context.getIoHandler().printInstructions("Please input your sending email details!\n" +
                 "Input format: recipient's email, subject, content");
 
-        @Nullable
-        String userInput = context.getIoHandler().getUserInsertedDetails();
-        if (!InputValidator.isValidEmailInput(userInput)) {
+        @Nullable String userInput = context.getIoHandler().getUserInsertedDetails();
+        if (userInput == null || !InputValidator.isValidEmailInput(userInput)) {
             context.getIoHandler().printInstructions("Invalid input format. Please follow the correct format.");
             return;
         }

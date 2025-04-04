@@ -3,10 +3,9 @@ package com.damika.emailclient.util;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class AppendableObjectOutputStream extends ObjectOutputStream {
-    public AppendableObjectOutputStream(@NonNull OutputStream out) throws IOException {
+    public AppendableObjectOutputStream(OutputStream out) throws IOException {
         super(out);
     }
 

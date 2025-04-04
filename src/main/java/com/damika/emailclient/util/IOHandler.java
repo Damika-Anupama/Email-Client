@@ -5,7 +5,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 public class IOHandler {
     private final BufferedReader reader;
 
@@ -23,7 +22,11 @@ public class IOHandler {
             try {
                 @Nullable
                 String input = reader.readLine();
-                return Integer.parseInt(input.trim());
+                if (input != null) {
+                    return Integer.parseInt(input.trim());
+                } else {
+                    return -1;
+                }
             } catch (IOException e) {
                 printInstructions("Error reading input. Please try again.");
             }

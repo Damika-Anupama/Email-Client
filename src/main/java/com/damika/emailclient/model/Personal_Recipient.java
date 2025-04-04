@@ -1,7 +1,7 @@
 package com.damika.emailclient.model;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
+
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 
@@ -13,30 +13,30 @@ public class Personal_Recipient extends Recipient {
     }
 
     @EnsuresNonNull({ "this.name", "this.email", "this.nickname", "this.birthday" })
-    public void initialize(@NonNull String name, @NonNull String email, @NonNull String nickname,
-            @NonNull String birthday) {
+    public void initialize(String name, String email, String nickname,
+            String birthday) {
         super.initialize(name, email);
         this.nickname = nickname;
         this.birthday = birthday;
     }
 
     @RequiresNonNull("this.nickname")
-    public @NonNull String getNickname() {
+    public String getNickname() {
         return nickname;
     }
 
     @EnsuresNonNull("this.nickname")
-    public void setNickname(@NonNull String nickname) {
+    public void setNickname(String nickname) {
         this.nickname = nickname;
     }
 
     @RequiresNonNull("this.birthday")
-    public @NonNull String getBirthday() {
+    public String getBirthday() {
         return birthday;
     }
 
     @EnsuresNonNull("this.birthday")
-    public void setBirthday(@NonNull String birthday) {
+    public void setBirthday(String birthday) {
         this.birthday = birthday;
     }
 

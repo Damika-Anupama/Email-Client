@@ -1,7 +1,6 @@
 package com.damika.emailclient.command.actions;
 
 import java.io.IOException;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 
@@ -10,22 +9,25 @@ import com.damika.emailclient.command.CommandContext;
 import com.damika.emailclient.util.InputValidator;
 
 public class AddRecipientCommand implements Command {
-    private final @NonNull CommandContext context;
-    private final @NonNull RecipientManager recipientManager;
+    private final @Nullable CommandContext context;
+    private final @Nullable RecipientManager recipientManager;
 
     @EnsuresNonNull({ "this.context", "this.recipientManager" })
-    public AddRecipientCommand(@NonNull CommandContext context) {
+    public AddRecipientCommand(CommandContext context) {
         this.context = context;
         this.recipientManager = new RecipientManager(context.getFileService(), context.getIoHandler());
     }
 
     @Override
     public void execute() {
+        if (context == null || recipientManager == null) {
+            throw new IllegalStateException("CommandContext or RecipientManager cannot be null");
+        }
+
         context.getIoHandler().printInstructions(
-                    "Enter 1: if you want to add a new recipient\n" +
-                    "Enter 2: If you want to get a specified recipient by email\n" +
-                    "Enter 3: If you want to get all the recipients\n"
-                );
+                "Enter 1: if you want to add a new recipient\n" +
+                        "Enter 2: If you want to get a specified recipient by email\n" +
+                        "Enter 3: If you want to get all the recipients\n");
         int input = context.getIoHandler().getUserSelectedOption();
 
         if (!InputValidator.isValidOption(String.valueOf(input), 1, 3)) {
@@ -44,7 +46,7 @@ public class AddRecipientCommand implements Command {
                 @Nullable
                 String recipientDetails = context.getIoHandler().getUserInsertedDetails();
 
-                if (!InputValidator.isValidRecipientInput(recipientDetails)) {
+                if (!InputValidator.isValidRecipientInput(recipientDetails) || recipientDetails == null) {
                     context.getIoHandler().printInstructions("Invalid input format. Please follow the correct format.");
                     return;
                 }

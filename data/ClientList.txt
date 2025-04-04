@@ -2,3 +2,6 @@ Official: Nimal,nimal@gmail.com,ceo
 Office_friend: kamal,kamal@gmail.com,clerk,2000/09/08
 Personal: sunil,sunil@gmail.com,bothale,2000/08/03
 Personal: damika,damikaanupama@gmail.com,damia,2000/03/27
+Official: Rajitha,rajitha.silva@corp.com,manager
+Office_friend: Vimukthi,vimukthi.s@office.com,assistant,1998/05/14
+Personal: Mihiran,mihi,mihiran.c@gmail.com,1995/11/03

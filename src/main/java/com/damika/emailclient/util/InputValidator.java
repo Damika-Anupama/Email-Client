@@ -27,7 +27,7 @@ public class InputValidator {
     }
 
     public static boolean isValidRecipientInput(@Nullable String input) {
-        if (isNullOrEmpty(input)) {
+        if (input == null || input.trim().isEmpty()) {
             return false;
         }
         if (!input.contains(": ")) {
@@ -46,7 +46,7 @@ public class InputValidator {
     }
 
     public static boolean isValidEmailInput(@Nullable String input) {
-        if (isNullOrEmpty(input)) {
+        if (input == null || input.trim().isEmpty()) {
             return false;
         }
         String[] split = input.split(", ");
@@ -54,7 +54,7 @@ public class InputValidator {
     }
 
     public static boolean isValidOption(@Nullable String input, int min, int max) {
-        if (isNullOrEmpty(input)) {
+        if (input == null || input.trim().isEmpty()) {
             return false;
         }
         try {
@@ -70,7 +70,7 @@ public class InputValidator {
     }
 
     public static boolean isValidDate(@Nullable String input, String dateFormat) {
-        if (isNullOrEmpty(input)) {
+        if (input == null || input.trim().isEmpty()) {
             return false;
         }
         try {

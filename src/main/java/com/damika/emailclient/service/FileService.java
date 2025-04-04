@@ -16,16 +16,15 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import com.damika.emailclient.model.Email;
 import com.damika.emailclient.util.AppendableObjectOutputStream;
 import com.damika.emailclient.util.IOHandler;
 
 public class FileService {
-    private final static @NonNull Path clientList = Paths.get("data/ClientList.txt");
-    private final static @NonNull Path emailList = Paths.get("data/EmailList.txt");
-    private final @NonNull IOHandler ioHandler;
+    private final static Path clientList = Paths.get("data/ClientList.txt");
+    private final static Path emailList = Paths.get("data/EmailList.txt");
+    private final IOHandler ioHandler;
 
     static {
         try {
@@ -50,11 +49,12 @@ public class FileService {
         }
     }
 
-    public FileService(@NonNull IOHandler ioHandler) {
+    public FileService(IOHandler ioHandler) {
         this.ioHandler = ioHandler;
     }
+
     /* Recipient Service */
-    public boolean saveRecipient(@NonNull String recipient) {
+    public boolean saveRecipient(String recipient) {
         // Validate basic format
         String[] parts = recipient.split(": ");
         if (parts.length != 2) {
@@ -108,7 +108,8 @@ public class FileService {
             String recipientFileData = new String(bytes);
             return recipientFileData.split("\\R");
         } catch (IOException e) {
-            ioHandler.printInstructions("There is a failure during reading the recipients, Please contact the developer!");
+            ioHandler.printInstructions(
+                    "There is a failure during reading the recipients, Please contact the developer!");
             return null;
         }
     }
@@ -139,8 +140,8 @@ public class FileService {
         return null;
     }
 
-    public @NonNull ArrayList<@NonNull String> findRecipientsByBOD(@NonNull String bod) {
-        ArrayList<@NonNull String> recipients = new ArrayList<>();
+    public ArrayList<String> findRecipientsByBOD(String bod) {
+        ArrayList<String> recipients = new ArrayList<>();
         @Nullable
         String[] allRecipients = getAllRecipients();
         if (allRecipients == null)
@@ -157,7 +158,7 @@ public class FileService {
         return recipients;
     }
 
-    public boolean saveEmail(@NonNull Email email) {
+    public boolean saveEmail(Email email) {
         boolean result = false;
         boolean append = false;
         try {
@@ -179,8 +180,8 @@ public class FileService {
         return result;
     }
 
-    public @NonNull ArrayList<@NonNull Email> findMail(@NonNull String sentDate) {
-        ArrayList<@NonNull Email> emails = new ArrayList<>();
+    public ArrayList<Email> findMail(String sentDate) {
+        ArrayList<Email> emails = new ArrayList<>();
 
         if (!Files.exists(emailList)) {
             return emails; // File does not exist, return empty list
@@ -214,9 +215,8 @@ public class FileService {
             }
         } catch (StreamCorruptedException sce) {
             ioHandler.printInstructions(
-                    sce.getMessage() + 
-                    "\n ⚠️ EmailList.txt is corrupted or not in valid serialized format."
-                );
+                    sce.getMessage() +
+                            "\n ⚠️ EmailList.txt is corrupted or not in valid serialized format.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
