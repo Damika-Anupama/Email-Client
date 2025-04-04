@@ -28,9 +28,6 @@ This is a **Java-based command-line email client** designed to manage recipients
   Implements the **Command Design Pattern** to encapsulate requests as objects, enabling features like undoable operations, parameterization of requests, and flexible command execution.  
   Code is modular and adheres to object-oriented best practices.
 
-- 🦺 **Null Safety**  
-  Leverages the [**Checker Framework**](https://checkerframework.org/manual) with `MonotonicNonNull`, `@Nullable`, etc., for safer code via nullness annotations.
-
 - 🛡️ **Error Handling**  
   Handles file I/O errors, malformed inputs, email configuration issues, etc.
 
