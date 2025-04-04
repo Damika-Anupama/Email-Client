@@ -16,8 +16,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <javac.version>9+181-r4173-1</javac.version>
-        <animal.sniffer.skip>true</animal.sniffer.skip>
     </properties>
 
     <dependencies>
@@ -36,23 +34,27 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Checker Framework Annotations -->
+        <!-- Checker Framework (Will be used later) -->
         <dependency>
             <groupId>org.checkerframework</groupId>
-            <artifactId>checker-qual</artifactId>
+            <artifactId>checker</artifactId>
             <version>3.49.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.errorprone</groupId>
-            <artifactId>javac</artifactId>
-            <version>${javac.version}</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- Exec plugin to run the app -->
+            <!-- Use Java 1.8 for compilation -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -64,80 +66,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>checkerframework</id>
-            <activation>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>3.11.0</version>
-                        <configuration>
-                            <fork>true</fork>
-                            <annotationProcessorPaths>
-                                <path>
-                                    <groupId>org.checkerframework</groupId>
-                                    <artifactId>checker</artifactId>
-                                    <version>3.49.1</version>
-                                </path>
-                            </annotationProcessorPaths>
-                            <annotationProcessors>
-                                <annotationProcessor>
-                                    org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
-                            </annotationProcessors>
-                            <compilerArgs>
-                                <arg>-Xmaxerrs</arg>
-                                <arg>10000</arg>
-                                <arg>-Xmaxwarns</arg>
-                                <arg>10000</arg>
-                            </compilerArgs>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>checkerframework-jdk8</id>
-            <activation>
-                <jdk>1.8</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <!-- Download patched javac for JDK 8 -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <phase>process-sources</phase>
-                                <configuration>
-                                    <artifact>com.google.errorprone:javac:${javac.version}:jar</artifact>
-                                    <outputDirectory>${project.build.directory}/javac</outputDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- Use the downloaded patched javac -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <configuration>
-                            <compilerArgs combine.children="append">
-                                <arg>
-                                    -J-Xbootclasspath/p:${project.build.directory}/javac/javac-${javac.version}.jar</arg>
-                            </compilerArgs>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

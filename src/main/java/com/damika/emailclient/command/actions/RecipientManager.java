@@ -9,8 +9,6 @@ import com.damika.emailclient.model.Personal_Recipient;
 import com.damika.emailclient.service.FileService;
 import com.damika.emailclient.util.IOHandler;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 public class RecipientManager {
     private final FileService fileService;
     private final IOHandler ioHandler;
@@ -47,12 +45,10 @@ public class RecipientManager {
         }
 
         Object recipient = createRecipient(type, details);
-        if (recipient != null) {
-            saveRecipient(recipient.toString());
-        }
+        saveRecipient(recipient.toString());
     }
 
-    private @Nullable Object createRecipient(String type, String[] details) {
+    private Object createRecipient(String type, String[] details) {
         switch (type) {
             case "Official":
                 OfficialRecipientController orc = new OfficialRecipientController();

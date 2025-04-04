@@ -11,8 +11,6 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import com.damika.emailclient.model.Email;
 import com.damika.emailclient.util.IOHandler;
 
@@ -25,7 +23,6 @@ public class EmailSendingService implements Runnable {
         this.fileService = fileService;
     }
 
-    @RequiresNonNull({ "#1.recipient", "#1.subject", "#1.content", "#1.sendingDate" })
     public boolean sendMail(Email email) {
 
         String sender = "palindrome.penguin.unity.clan@gmail.com";
@@ -45,17 +42,9 @@ public class EmailSendingService implements Runnable {
         MimeMessage message = new MimeMessage(session);
 
         try {
-            @Nullable
             String recipient = email.getRecipient();
-            @Nullable
             String subject = email.getSubject();
-            @Nullable
             String content = email.getContent();
-
-            if (recipient == null || subject == null || content == null) {
-                ioHandler.printInstructions("Error: recipient, subject, or content is null. Email not sent.");
-                return false;
-            }
 
             message.setFrom(new InternetAddress(sender));
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
@@ -83,22 +72,12 @@ public class EmailSendingService implements Runnable {
         String todayFull = fullFormat.format(now);
 
         FileService file_service = this.fileService;
-        @Nullable
         String[] recipients = file_service.getAllRecipients();
-
-        if (recipients == null) {
-            ioHandler.printInstructions("No recipients to process.");
-            return;
-        }
 
         // Load all previously sent emails
         ArrayList<Email> previouslySent = file_service.findMail(todayFull);
 
-        for (@Nullable
-        String s : recipients) {
-            if (s == null || s.trim().isEmpty()) {
-                continue;
-            }
+        for (String s : recipients) {
 
             String[] split1 = s.split(": ");
             if (split1.length < 2) {

@@ -16,7 +16,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import com.damika.emailclient.model.Email;
 import com.damika.emailclient.util.AppendableObjectOutputStream;
 import com.damika.emailclient.util.IOHandler;
@@ -29,19 +28,13 @@ public class FileService {
     static {
         try {
             if (!Files.exists(clientList)) {
-                @Nullable
                 Path clientListParent = clientList.getParent();
-                if (clientListParent != null) {
-                    Files.createDirectories(clientListParent);
-                }
+                Files.createDirectories(clientListParent);
                 Files.createFile(clientList);
             }
             if (!Files.exists(emailList)) {
-                @Nullable
                 Path emailListParent = emailList.getParent();
-                if (emailListParent != null) {
-                    Files.createDirectories(emailListParent);
-                }
+                Files.createDirectories(emailListParent);
                 Files.createFile(emailList);
             }
         } catch (IOException e) {
@@ -68,11 +61,9 @@ public class FileService {
             return false;
         }
 
-        @Nullable
         String email = fields[1].trim();
 
         // Check if email already exists
-        @Nullable
         String existing = findRecipientByEmailAddress(email);
         if (Files.exists(clientList) && existing != null) {
             ioHandler.printInstructions("This user already exists!");
@@ -98,7 +89,7 @@ public class FileService {
         }
     }
 
-    public @Nullable String @Nullable [] getAllRecipients() {
+    public String [] getAllRecipients() {
         if (!Files.exists(clientList)) {
             ioHandler.printInstructions("No Recipient exists!");
             return null;
@@ -114,16 +105,9 @@ public class FileService {
         }
     }
 
-    public @Nullable String findRecipientByEmailAddress(@Nullable String email) {
-        @Nullable
+    public String findRecipientByEmailAddress(String email) {
         String[] recipients = getAllRecipients();
-        if (recipients == null)
-            return null;
-        for (@Nullable
-        String recipient : recipients) {
-            if (recipient == null)
-                continue;
-
+        for (String recipient : recipients) {
             String[] parts = recipient.split(": ");
             if (parts.length < 2)
                 continue;
@@ -142,14 +126,8 @@ public class FileService {
 
     public ArrayList<String> findRecipientsByBOD(String bod) {
         ArrayList<String> recipients = new ArrayList<>();
-        @Nullable
         String[] allRecipients = getAllRecipients();
-        if (allRecipients == null)
-            return recipients;
-        for (@Nullable
-        String recipient : allRecipients) {
-            if (recipient == null)
-                continue;
+        for (String recipient : allRecipients) {
             String[] recipientDetails = recipient.split(": ")[1].split(",");
             if (recipientDetails.length == 4 && recipientDetails[3].trim().equals(bod.trim())) {
                 recipients.add(recipient);

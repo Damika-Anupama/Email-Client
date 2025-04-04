@@ -1,6 +1,5 @@
 package com.damika.emailclient.util;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -17,16 +16,16 @@ public class InputValidator {
         RECIPIENT_TYPE_FIELD_COUNT.put("Personal", 4);
     }
 
-    public static boolean isNullOrEmpty(@Nullable String input) {
+    public static boolean isNullOrEmpty(String input) {
         return input == null || input.trim().isEmpty();
     }
 
-    public static boolean isNullOrEmpty(@Nullable String[] input) {
+    public static boolean isNullOrEmpty(String[] input) {
         return input == null || input.length == 0 || 
                java.util.Arrays.stream(input).allMatch(str -> str == null || str.trim().isEmpty());
     }
 
-    public static boolean isValidRecipientInput(@Nullable String input) {
+    public static boolean isValidRecipientInput(String input) {
         if (input == null || input.trim().isEmpty()) {
             return false;
         }
@@ -45,7 +44,7 @@ public class InputValidator {
         return details.length == expectedLength;
     }
 
-    public static boolean isValidEmailInput(@Nullable String input) {
+    public static boolean isValidEmailInput(String input) {
         if (input == null || input.trim().isEmpty()) {
             return false;
         }
@@ -53,7 +52,7 @@ public class InputValidator {
         return split.length >= 3;
     }
 
-    public static boolean isValidOption(@Nullable String input, int min, int max) {
+    public static boolean isValidOption(String input, int min, int max) {
         if (input == null || input.trim().isEmpty()) {
             return false;
         }
@@ -65,11 +64,11 @@ public class InputValidator {
         }
     }
 
-    public static boolean isValidInput(@Nullable String input) {
+    public static boolean isValidInput(String input) {
         return !isNullOrEmpty(input);
     }
 
-    public static boolean isValidDate(@Nullable String input, String dateFormat) {
+    public static boolean isValidDate(String input, String dateFormat) {
         if (input == null || input.trim().isEmpty()) {
             return false;
         }

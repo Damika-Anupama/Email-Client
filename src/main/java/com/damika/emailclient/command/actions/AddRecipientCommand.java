@@ -1,18 +1,15 @@
 package com.damika.emailclient.command.actions;
 
 import java.io.IOException;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 
 import com.damika.emailclient.command.Command;
 import com.damika.emailclient.command.CommandContext;
 import com.damika.emailclient.util.InputValidator;
 
 public class AddRecipientCommand implements Command {
-    private final @Nullable CommandContext context;
-    private final @Nullable RecipientManager recipientManager;
+    private final CommandContext context;
+    private final RecipientManager recipientManager;
 
-    @EnsuresNonNull({ "this.context", "this.recipientManager" })
     public AddRecipientCommand(CommandContext context) {
         this.context = context;
         this.recipientManager = new RecipientManager(context.getFileService(), context.getIoHandler());
@@ -20,10 +17,6 @@ public class AddRecipientCommand implements Command {
 
     @Override
     public void execute() {
-        if (context == null || recipientManager == null) {
-            throw new IllegalStateException("CommandContext or RecipientManager cannot be null");
-        }
-
         context.getIoHandler().printInstructions(
                 "Enter 1: if you want to add a new recipient\n" +
                         "Enter 2: If you want to get a specified recipient by email\n" +
@@ -43,14 +36,7 @@ public class AddRecipientCommand implements Command {
                         "Office_friend: kamal,kamal@gmail.com,clerk,2000/09/08\n" +
                         "Personal: sunil,sunil@gmail.com,<nick-name>,2000/08/03");
 
-                @Nullable
                 String recipientDetails = context.getIoHandler().getUserInsertedDetails();
-
-                if (!InputValidator.isValidRecipientInput(recipientDetails) || recipientDetails == null) {
-                    context.getIoHandler().printInstructions("Invalid input format. Please follow the correct format.");
-                    return;
-                }
-
                 String[] split = recipientDetails.split(": ");
                 String type = split[0];
                 String[] details = split[1].split(",");
@@ -66,36 +52,18 @@ public class AddRecipientCommand implements Command {
             case 2:
                 context.getIoHandler().printInstructions("Please enter the email of the recipient: ");
                 try {
-                    @Nullable
                     String email = context.getReader().readLine();
-                    if (InputValidator.isNullOrEmpty(email)) {
-                        context.getIoHandler().printInstructions("Input was null or empty.");
-                        return;
-                    }
-
-                    @Nullable
                     String recipient = context.getFileService().findRecipientByEmailAddress(email);
-                    if (recipient != null) {
-                        context.getIoHandler().printInstructions(recipient);
-                    } else {
-                        context.getIoHandler().printInstructions("Recipient not found.");
-                    }
+                    context.getIoHandler().printInstructions(recipient);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 break;
 
             case 3:
-                @Nullable
                 String[] recipients = context.getFileService().getAllRecipients();
-                if (recipients == null || recipients.length == 0) {
-                    context.getIoHandler().printInstructions("No recipients found!");
-                    return;
-                }
                 for (String recipient : recipients) {
-                    if (recipient != null) {
-                        context.getIoHandler().printInstructions(recipient);
-                    }
+                    context.getIoHandler().printInstructions(recipient);
                 }
                 context.getIoHandler().printInstructions("All recipients have been printed!");
                 break;

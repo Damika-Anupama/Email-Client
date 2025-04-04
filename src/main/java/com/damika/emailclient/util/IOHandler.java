@@ -1,7 +1,5 @@
 package com.damika.emailclient.util;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,29 +18,17 @@ public class IOHandler {
         while (true) {
             printInstructions("Please enter your option in a valid range!");
             try {
-                @Nullable
                 String input = reader.readLine();
-                if (input != null) {
-                    return Integer.parseInt(input.trim());
-                } else {
-                    return -1;
-                }
+                return Integer.parseInt(input.trim());
             } catch (IOException e) {
                 printInstructions("Error reading input. Please try again.");
             }
         }
     }
 
-    public @Nullable String getUserInsertedDetails() {
+    public String getUserInsertedDetails() {
         try {
-            @Nullable
-            String input = reader.readLine();
-            if (InputValidator.isValidInput(input)) {
-                return input;
-            } else {
-                printInstructions("Invalid input. Please try again.");
-                return null;
-            }
+            return reader.readLine();
         } catch (IOException e) {
             printInstructions("Your input operation failed or was interrupted!");
             return null;

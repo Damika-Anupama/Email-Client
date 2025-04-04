@@ -1,35 +1,26 @@
 package com.damika.emailclient.model;
 
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-
 public class Official_Recipient_Friend extends Official_Recipient {
-    private @MonotonicNonNull String birthday;
+    private String birthday;
 
     public Official_Recipient_Friend() {
     }
 
-    @EnsuresNonNull({ "this.name", "this.email", "this.designation", "this.birthday" })
     public void initialize(String name, String email, String designation,
             String birthday) {
         super.initialize(name, email, designation);
         this.birthday = birthday;
     }
 
-    @EnsuresNonNull("this.birthday")
     public void setBirthday(String birthday) {
         this.birthday = birthday;
     }
 
-    @RequiresNonNull("this.birthday")
     public String getBirthday() {
         return birthday;
     }
 
     @Override
-    @SuppressWarnings("nullness")
     public String toString() {
         return "Office_friend: " +
                 getName() + ',' +
