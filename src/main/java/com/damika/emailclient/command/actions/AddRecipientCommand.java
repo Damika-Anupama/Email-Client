@@ -2,6 +2,7 @@ package com.damika.emailclient.command.actions;
 
 import java.io.IOException;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.common.value.qual.ArrayLen;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 
 import com.damika.emailclient.command.Command;
@@ -51,16 +52,25 @@ public class AddRecipientCommand implements Command {
                     return;
                 }
 
-                String[] split = recipientDetails.split(": ");
-                String type = split[0];
-                String[] details = split[1].split(",");
+                String[] parts = recipientDetails.split(": ");
+                if (parts.length != 2) {
+                    context.getIoHandler().printInstructions("Invalid format. Must contain a single ': ' to separate type and details.");
+                    return;
+                }
+
+                String type = parts[0];
+                String[] details = parts[1].split(",");
+                if (details.length < 3 || details.length > 4) {
+                    context.getIoHandler().printInstructions("Invalid format. Not enough details after ': '.");
+                    return;
+                }
 
                 if (!InputValidator.isValidRecipientTypeAndDetails(type, details)) {
                     context.getIoHandler().printInstructions("Invalid recipient type or details. Please try again.");
                     return;
                 }
 
-                recipientManager.saveRecipientByType(type, details);
+                recipientManager.saveRecipientByType(type, (@ArrayLen({3, 4}) String[]) details);
                 break;
 
             case 2:

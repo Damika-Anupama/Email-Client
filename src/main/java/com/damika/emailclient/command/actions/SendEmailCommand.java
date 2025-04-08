@@ -37,6 +37,10 @@ public class SendEmailCommand implements Command {
         }
 
         String[] emailDetails = userInput.split(", ");
+        if (emailDetails.length < 3) {
+            context.getIoHandler().printInstructions("Invalid input format. Please provide at least recipient, subject, and content.");
+            return;
+        }
         BasicEmailController bec = new BasicEmailController();
         Email email = bec.create();
         email.setRecipient(emailDetails[0]);

@@ -88,7 +88,9 @@
                             <annotationProcessors>
                                 <annotationProcessor>
                                     org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
-                            </annotationProcessors>
+                                <annotationProcessor>
+                                    org.checkerframework.checker.index.IndexChecker</annotationProcessor>
+                            </annotationProcessors>                            
                             <compilerArgs>
                                 <arg>-Xmaxerrs</arg>
                                 <arg>10000</arg>

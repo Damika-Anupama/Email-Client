@@ -101,7 +101,7 @@ public class EmailSendingService implements Runnable {
             }
 
             String[] split1 = s.split(": ");
-            if (split1.length < 2) {
+            if (split1.length != 2) {
                 System.err.println("Invalid recipient format: " + s);
                 continue;
             }
@@ -109,7 +109,7 @@ public class EmailSendingService implements Runnable {
             String type = split1[0];
             String[] split2 = split1[1].split(",");
 
-            if ((type.equals("Personal") || type.equals("Office_friend")) && split2.length >= 4) {
+            if ((type.equals("Personal") || type.equals("Office_friend")) && split2.length == 4) {
                 String birthday = split2[3]; // yyyy/MM/dd
 
                 if (birthday.length() >= 5 && birthday.substring(5).equals(todayShort)) {

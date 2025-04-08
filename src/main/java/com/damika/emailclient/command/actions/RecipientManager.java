@@ -10,6 +10,8 @@ import com.damika.emailclient.service.FileService;
 import com.damika.emailclient.util.IOHandler;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.common.value.qual.ArrayLen;
+import org.checkerframework.common.value.qual.ArrayLenRange;
 
 public class RecipientManager {
     private final FileService fileService;
@@ -25,7 +27,7 @@ public class RecipientManager {
                 fileService.saveRecipient(data) ? "Client saved successfully!" : "Try again!");
     }
 
-    public void saveRecipientByType(String type, String[] details) {
+    public void saveRecipientByType(String type, @ArrayLen({ 3, 4 }) String[] details) {
         int expectedLength;
         switch (type) {
             case "Official":
@@ -52,25 +54,37 @@ public class RecipientManager {
         }
     }
 
-    private @Nullable Object createRecipient(String type, String[] details) {
+    private @Nullable Object createRecipient(String type, @ArrayLenRange(from = 3, to = 4) String[] details) {
         switch (type) {
             case "Official":
                 OfficialRecipientController orc = new OfficialRecipientController();
                 Official_Recipient or = (Official_Recipient) orc.create();
-                or.initialize(details[0], details[1], details[2]);
-                return or;
+                if (details.length >= 3) {
+                    or.initialize(details[0], details[1], details[2]);
+                    return or;
+                }
+                ioHandler.printInstructions("Insufficient details for 'Official' recipient.");
+                return null;
 
             case "Office_friend":
-                OfficialRecipientFriendController orfc = new OfficialRecipientFriendController();
-                Official_Recipient_Friend orf = (Official_Recipient_Friend) orfc.create();
-                orf.initialize(details[0], details[1], details[2], details[3]);
-                return orf;
+                if (details.length >= 4) {
+                    OfficialRecipientFriendController orfc = new OfficialRecipientFriendController();
+                    Official_Recipient_Friend orf = (Official_Recipient_Friend) orfc.create();
+                    orf.initialize(details[0], details[1], details[2], details[3]);
+                    return orf;
+                }
+                ioHandler.printInstructions("Insufficient details for 'Office_friend' recipient.");
+                return null;
 
             case "Personal":
-                PersonalRecipientController prc = new PersonalRecipientController();
-                Personal_Recipient pr = (Personal_Recipient) prc.create();
-                pr.initialize(details[0], details[1], details[2], details[3]);
-                return pr;
+                if (details.length >= 4) {
+                    PersonalRecipientController prc = new PersonalRecipientController();
+                    Personal_Recipient pr = (Personal_Recipient) prc.create();
+                    pr.initialize(details[0], details[1], details[2], details[3]);
+                    return pr;
+                }
+                ioHandler.printInstructions("Insufficient details for 'Personal' recipient.");
+                return null;
 
             default:
                 ioHandler.printInstructions("Unknown recipient type. Cannot create recipient.");

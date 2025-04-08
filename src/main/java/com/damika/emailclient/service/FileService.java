@@ -63,7 +63,7 @@ public class FileService {
         }
 
         String[] fields = parts[1].split(",");
-        if (fields.length < 2) {
+        if (fields.length < 3 || fields.length > 4) {
             ioHandler.printInstructions("Invalid format. Not enough fields after ': '.");
             return false;
         }
@@ -129,7 +129,7 @@ public class FileService {
                 continue;
 
             String[] fields = parts[1].split(",");
-            if (fields.length < 2)
+            if (fields.length < 3 || fields.length > 4)
                 continue;
 
             String recipientEmail = fields[1];
@@ -150,7 +150,13 @@ public class FileService {
         String recipient : allRecipients) {
             if (recipient == null)
                 continue;
-            String[] recipientDetails = recipient.split(": ")[1].split(",");
+            String[] parts = recipient.split(": ");
+            if (parts.length < 2) {
+                continue;
+            }
+            String[] recipientDetails = parts[1].split(",");
+            if (recipientDetails.length != 4)
+                continue;
             if (recipientDetails.length == 4 && recipientDetails[3].trim().equals(bod.trim())) {
                 recipients.add(recipient);
             }
