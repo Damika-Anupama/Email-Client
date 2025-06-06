@@ -3,6 +3,7 @@ package com.damika.emailclient.command.actions;
 import java.io.IOException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.common.value.qual.ArrayLen;
+import org.checkerframework.checker.index.qual.*;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 
 import com.damika.emailclient.command.Command;
@@ -53,12 +54,13 @@ public class AddRecipientCommand implements Command {
                 }
 
                 String[] parts = recipientDetails.split(": ");
-                if (parts.length != 2) {
+                @LengthOf("parts") int partsLength = parts.length;
+                if (partsLength != 2) {
                     context.getIoHandler().printInstructions("Invalid format. Must contain a single ': ' to separate type and details.");
                     return;
                 }
-
-                String type = parts[0];
+                @IndexFor("parts") int index = 0;
+                String type = parts[index];
                 String[] details = parts[1].split(",");
                 if (details.length < 3 || details.length > 4) {
                     context.getIoHandler().printInstructions("Invalid format. Not enough details after ': '.");
